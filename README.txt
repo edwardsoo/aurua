@@ -24,5 +24,3 @@ to build the framework and:
 > ./P2
 
 to run the demo.
-
-
