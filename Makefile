@@ -1,12 +1,12 @@
 CCFLAGS = -g -pg
 
-default: P2
-all: P2
+default: aurua
+all: aurua
 
-P2: main.cpp
-	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp -o P2 \
-		-lGL -lGLU -lglut
+aurua: main.o ship.o
+	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp ship.cpp global.cpp -o aurua \
+		glut32.lib -lopengl32 -lglu32
 
 clean:
-	touch P2
-	rm -rf P2 *.o
+	touch aurua
+	rm -rf aurua.exe *.o

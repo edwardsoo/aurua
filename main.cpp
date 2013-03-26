@@ -497,11 +497,6 @@ void idle( int value ){
     glutSetWindow( mother_window );
     glutPostRedisplay();
     
-    // now set the currently active window to the scout ship
-    // and redisplay it as well
-    glutSetWindow( scout_window );
-    glutPostRedisplay();
-    
     // set a timer to call this function again after the
     // required number of milliseconds
     glutTimerFunc( dt, idle, 0 );
@@ -534,17 +529,17 @@ int main( int argc, char **argv ){
 	glutReshapeFunc( resize_callback );
 
 	// initialize the scout ship window
-	glutInitWindowSize( disp_width, disp_height );
-	glutInitWindowPosition( disp_width + 50, 100 );
-	scout_window = glutCreateWindow( "Scout Ship" );
+	//glutInitWindowSize( disp_width, disp_height );
+	//glutInitWindowPosition( disp_width + 50, 100 );
+	/*scout_window = glutCreateWindow( "Scout Ship" );
 	glutKeyboardFunc( keyboard_callback );
 	glutDisplayFunc( display_callback );
-	glutReshapeFunc( resize_callback );
+	glutReshapeFunc( resize_callback );*/
 
 	glutSetWindow( mother_window );
 	init();
-	glutSetWindow( scout_window );
-	init();
+	/*glutSetWindow( scout_window );
+	init();*/
 
 	// start the idle on a fixed timer callback
 	idle( 0 );
