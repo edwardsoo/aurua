@@ -47,6 +47,9 @@ int disp_width = 500, disp_height = 500;
 Ship mother_ship;
 Ship child_ship;
 
+//Cool debug tool! Use command line arguments to pass in ints!
+bool is_use_in_values = false;
+double in_value[3];
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Initialization/Setup and Teardown ////////////////////////////
@@ -513,14 +516,27 @@ void draw_title()
 	glBegin(GL_QUADS);
 	glColor3f(0,0,0);
 
-	float cube_length_x = 6.0;
-	float cube_length_y = 3.0;
+	double rect_length_x;
+	double rect_length_y;
+
+	if (is_use_in_values)
+	{
+		rect_length_x = in_value[0];
+		rect_length_y = in_value[1];
+	}
+	else
+	{
+		rect_length_x = 1.0;
+		rect_length_y = 1.0;
+	}
+
 	glNormal3f(0.0, 0.0, 1.0);
 
 	glTexCoord2d(1, 1); glVertex3f(0.0, 0.0, 0.0);
-	glTexCoord2d(1, 0); glVertex3f(0.0, cube_length_y, 0.0);
-	glTexCoord2d(0, 0); glVertex3f(cube_length_x, cube_length_y, 0.0);
-	glTexCoord2d(0, 1); glVertex3f(cube_length_x, 0.0, 0.0);
+	glTexCoord2d(1, 0); glVertex3f(0.0, rect_length_y, 0.0);
+	glTexCoord2d(0, 0); glVertex3f(rect_length_x, rect_length_y, 0.0);
+	glTexCoord2d(0, 1); glVertex3f(rect_length_x, 0.0, 0.0);
+
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -560,6 +576,24 @@ void render()
 //////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+
+	if (argc == 4)
+	{
+		is_use_in_values = true;
+		for (int x = 1; x < 4; x++)
+		{
+			cout << "a" << argv[x];
+			in_value[x - 1] = strtod(argv[x], NULL);
+		}
+	}
+	else
+	{
+		for (int x = 0; x < 3; x++)
+		{
+			in_value[x] = 0;
+		}
+	}
+
 	mother_ship = Ship();
 	child_ship = Ship();
 	child_ship.eyePoint[2] = 20;
@@ -573,7 +607,7 @@ int main(int argc, char **argv)
 	// initialize the mothership window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(0, 100);
-	main_window = glutCreateWindow("Mother Ship");
+	main_window = glutCreateWindow("AURUA");
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(render);
 	glutReshapeFunc(resize_callback);
