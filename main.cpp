@@ -532,10 +532,10 @@ void draw_title()
 
 	glNormal3f(0.0, 0.0, 1.0);
 
-	glTexCoord2d(1, 1); glVertex3f(0.0, 0.0, 0.0);
-	glTexCoord2d(1, 0); glVertex3f(0.0, rect_length_y, 0.0);
+	glTexCoord2d(1, 1); glVertex3f(-rect_length_x, -rect_length_y, 0.0);
+	glTexCoord2d(1, 0); glVertex3f(-rect_length_x, rect_length_y, 0.0);
 	glTexCoord2d(0, 0); glVertex3f(rect_length_x, rect_length_y, 0.0);
-	glTexCoord2d(0, 1); glVertex3f(rect_length_x, 0.0, 0.0);
+	glTexCoord2d(0, 1); glVertex3f(rect_length_x, -rect_length_y, 0.0);
 
 	glEnd();
 
@@ -610,6 +610,7 @@ int main(int argc, char **argv)
 	main_window = glutCreateWindow("AURUA");
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(render);
+	//glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
 
 	// initialize the scout ship window
