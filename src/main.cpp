@@ -229,8 +229,16 @@ void keyboard_callback(unsigned char key, int x, int y) {
 void motion_callback(int x, int y) {
 	int current_window;
 	double dx, dy;
-	dx = x - prev_x;
-	dy = y - prev_y;
+	GLint vp[4];
+
+	glGetIntegerv(GL_VIEWPORT, vp);
+	int mid_x = vp[2] >> 1;
+	int mid_y = vp[3] >> 1;
+
+	dx = x - mid_x;
+	dy = y - mid_y;
+
+	glutWarpPointer(mid_x, mid_y);
 
 	// retrieve the currently active window
 	current_window = glutGetWindow();
@@ -252,15 +260,9 @@ void motion_callback(int x, int y) {
 	cam.view[2] = cam.pos[2] + (sin(y_rad) * gaze[1] + cos(y_rad) * gaze[2]);
 	cam.view[1] = cam.pos[0] + (cos(y_rad) * gaze[1] - sin(y_rad) * gaze[2]);
 
-//	GLint vp[4];
-//	glGetIntegerv(GL_VIEWPORT, vp);
 //	int pos_x = glutGet((GLenum) GLUT_WINDOW_X );
 //	int pos_y = glutGet((GLenum) GLUT_WINDOW_Y );
 
-	// Set cursor to the midpoint of the viewport
-	prev_x = x;
-	prev_y = y;
-	//glutWarpPointer(vp[2] / 2, vp[3] / 2);
 
 //	printf("viewport: %d %d %d %d, pos_x %d pos_y %d\n", vp[0], vp[1], vp[2],
 //			vp[3], pos_x, pos_y);
@@ -438,8 +440,9 @@ void display_callback(void) {
 	glLoadIdentity();
 	gluLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
 			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
-	printf("pos %f %f %f view %f %f %f up %f %f %f \n", cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
-			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
+	printf("pos %f %f %f view %f %f %f up %f %f %f \n", cam.pos[0], cam.pos[1],
+			cam.pos[2], cam.view[0], cam.view[1], cam.view[2], cam.up[0],
+			cam.up[1], cam.up[2]);
 	glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
 
 	draw_scene();
