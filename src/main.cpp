@@ -16,11 +16,14 @@
 
 #include<iostream>
 #include<stdlib.h>
+#include<stdio.h>
+#include<math.h>
+
 #include "ViewingMode.h"
 #include "Ship.h"
 #include "Global.h"
+#include "Camera.h"
 
-#include <iostream>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////
@@ -31,21 +34,25 @@ using namespace std;
 
 // time increment between calls to idle() in ms,
 // currently set to 30 FPS
-float dt = 1000.0f * 1.0f / 30.0f;
+float dt = 1000.0f * 1.0f / 60.0f;
 
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
 
 // window handles for mother ship and scout ship
-int main_window;
+int main_window, cam_window;
 
 static GLuint texture;
 
 // display width and height
-int disp_width = 500, disp_height = 500;
+int disp_width = 800, disp_height = 640;
 
 Ship mother_ship;
 Ship child_ship;
+Camera cam;
+
+// Cursor previous position
+int prev_x, prev_y;
 
 //Cool debug tool! Use command line arguments to pass in ints!
 bool is_use_in_values = false;
@@ -58,8 +65,7 @@ double in_value[3];
 
 // set up opengl state, allocate objects, etc.  This gets called
 // ONCE PER WINDOW, so don't allocate your objects twice!
-void init()
-{
+void init() {
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your initialization code here! ////////////////
 	/////////////////////////////////////////////////////////////
@@ -72,20 +78,15 @@ void init()
 	glEnable(GL_NORMALIZE);
 
 	// lighting stuff
-	GLfloat ambient[] =
-	{ 0.0, 0.0, 0.0, 1.0 };
-	GLfloat diffuse[] =
-	{ 0.9, 0.9, 0.9, 1.0 };
-	GLfloat specular[] =
-	{ 0.4, 0.4, 0.4, 1.0 };
-	GLfloat position0[] =
-	{ 1.0, 1.0, 1.0, 0.0 };
+	GLfloat ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat diffuse[] = { 0.9, 0.9, 0.9, 1.0 };
+	GLfloat specular[] = { 0.4, 0.4, 0.4, 1.0 };
+	GLfloat position0[] = { 1.0, 1.0, 1.0, 0.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
-	GLfloat position1[] =
-	{ -1.0, -1.0, -1.0, 0.0 };
+	GLfloat position1[] = { -1.0, -1.0, -1.0, 0.0 };
 	glLightfv(GL_LIGHT1, GL_POSITION, position1);
 	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
@@ -99,8 +100,7 @@ void init()
 }
 
 // free any allocated objects and return
-void cleanup()
-{
+void cleanup() {
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your teardown code here! //////////////////////
 	/////////////////////////////////////////////////////////////
@@ -110,8 +110,7 @@ void cleanup()
 const int DIMENSIONS = 3;
 
 // inversion routine originally from MESA
-bool invert_pose(float *m)
-{
+bool invert_pose(float *m) {
 	float inv[16], det;
 	int i;
 
@@ -183,8 +182,7 @@ bool invert_pose(float *m)
 //////////////////////////////////////////////////////////////////
 
 // window resize callback
-void resize_callback(int width, int height)
-{
+void resize_callback(int width, int height) {
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your resize code here! ////////////////////////
 	/////////////////////////////////////////////////////////////
@@ -192,8 +190,7 @@ void resize_callback(int width, int height)
 	glutPostRedisplay();
 }
 
-void drawAxis()
-{
+void drawAxis() {
 	glBegin(GL_LINES);
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glVertex3f(1.0f, 0.0f, 0.0f);
@@ -214,10 +211,8 @@ void drawAxis()
  }*/
 
 // keyboard callback
-void keyboard_callback(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
+void keyboard_callback(unsigned char key, int x, int y) {
+	switch (key) {
 	case 27:
 		is_quit = true;
 		return;
@@ -230,8 +225,49 @@ void keyboard_callback(unsigned char key, int x, int y)
 	mother_ship.keyboardCallback(key);
 }
 
-void drawSun()
-{
+// motion callback
+void motion_callback(int x, int y) {
+	int current_window;
+	double dx, dy;
+	dx = x - prev_x;
+	dy = y - prev_y;
+
+	// retrieve the currently active window
+	current_window = glutGetWindow();
+	if (dx != 0 || dy != 0) {
+		printf("current window: %d\n", current_window);
+		printf("x=%d y=%d prev_x=%d prev_y=%d dx=%f dy=%f\n", x, y, prev_x,
+				prev_y, dx, dy);
+	}
+
+	double gaze[3];
+	gaze[0] = cam.view[0] - cam.pos[0];
+	gaze[1] = cam.view[1] - cam.pos[1];
+	gaze[2] = cam.view[2] - cam.pos[2];
+	double x_rad = dx / disp_width;
+	double y_rad = dy / disp_height;
+
+	cam.view[2] = cam.pos[2] + (sin(x_rad) * gaze[0] + cos(x_rad) * gaze[2]);
+	cam.view[0] = cam.pos[0] + (cos(x_rad) * gaze[0] - sin(x_rad) * gaze[2]);
+	cam.view[2] = cam.pos[2] + (sin(y_rad) * gaze[1] + cos(y_rad) * gaze[2]);
+	cam.view[1] = cam.pos[0] + (cos(y_rad) * gaze[1] - sin(y_rad) * gaze[2]);
+
+//	GLint vp[4];
+//	glGetIntegerv(GL_VIEWPORT, vp);
+//	int pos_x = glutGet((GLenum) GLUT_WINDOW_X );
+//	int pos_y = glutGet((GLenum) GLUT_WINDOW_Y );
+
+	// Set cursor to the midpoint of the viewport
+	prev_x = x;
+	prev_y = y;
+	//glutWarpPointer(vp[2] / 2, vp[3] / 2);
+
+//	printf("viewport: %d %d %d %d, pos_x %d pos_y %d\n", vp[0], vp[1], vp[2],
+//			vp[3], pos_x, pos_y);
+//	printf("cam view: %f, %f, %f\n", cam.view[0], cam.view[1], cam.view[2]);
+}
+
+void drawSun() {
 	glColor3f(1.0f, 1.0f, 0.0f);
 	glPushMatrix();
 	glRotatef(progress[2] * 360, 0, 1.0, 0);
@@ -239,14 +275,12 @@ void drawSun()
 	glPopMatrix();
 }
 
-void switchColorFromPlanet(int planet, bool isTransparent)
-{
+void switchColorFromPlanet(int planet, bool isTransparent) {
 	float r;
 	float g;
 	float b;
 
-	switch (planet)
-	{
+	switch (planet) {
 	case 0: //Mercury
 		r = .5;
 		g = .8;
@@ -294,18 +328,14 @@ void switchColorFromPlanet(int planet, bool isTransparent)
 		break;
 	}
 
-	if (isTransparent)
-	{
+	if (isTransparent) {
 		glColor4f(r, g, b, 0.4);
-	}
-	else
-	{
+	} else {
 		glColor3f(r, g, b);
 	}
 }
 
-void drawMoon()
-{
+void drawMoon() {
 	glPushMatrix();
 	glRotatef(2 * progress[2] * 360, 0, 0, 1.0);
 	glTranslatef(.8f, 0, 0);
@@ -315,8 +345,7 @@ void drawMoon()
 	glPopMatrix();
 }
 
-void drawSaturnsRings()
-{
+void drawSaturnsRings() {
 	glPushMatrix();
 	glRotatef(45, 0, 0, 1);
 	glScalef(1, 0.02f, 1);
@@ -325,8 +354,7 @@ void drawSaturnsRings()
 	glPopMatrix();
 }
 
-void drawRing(int planet)
-{
+void drawRing(int planet) {
 	glPushMatrix();
 	glRotatef(90, 1, 0, 0);
 	float where = getPlanetLocation(planet);
@@ -334,26 +362,20 @@ void drawRing(int planet)
 	glPopMatrix();
 }
 
-void drawPlanets()
-{
-	for (int x = 0; x < 9; x++)
-	{
+void drawPlanets() {
+	for (int x = 0; x < 9; x++) {
 		glPushMatrix();
-		if (isTimeProgressing)
-		{
+		if (isTimeProgressing) {
 			updateDay(x);
 		}
 		switchColorFromPlanet(x, true);
 		drawRing(x);
 		glRotatef(progress[x] * 360, 0, 1.0, 0);
 		glTranslatef(getPlanetLocation(x), 0, 0);
-		if (x == 2)
-		{
+		if (x == 2) {
 			//Earth, draw moon.
 			drawMoon();
-		}
-		else if (x == 5)
-		{
+		} else if (x == 5) {
 			drawSaturnsRings();
 		}
 		switchColorFromPlanet(x, false);
@@ -364,8 +386,7 @@ void drawPlanets()
 	}
 }
 
-void modelMotherShip()
-{
+void modelMotherShip() {
 	glPushMatrix();
 	glutSolidCube(1);
 	glTranslatef(0, 0, -.5);
@@ -374,8 +395,7 @@ void modelMotherShip()
 	glPopMatrix();
 }
 
-void modelChildShip()
-{
+void modelChildShip() {
 	glPushMatrix();
 	glutSolidSphere(.5, 20, 20);
 	glTranslatef(0, 0, -.5);
@@ -388,16 +408,22 @@ void modelChildShip()
 	glPopMatrix();
 }
 
-// display callback
-void display_callback(void)
-{
-	int current_window;
+void draw_scene() {
+	glColor3f(1, 1, 1);
+	glTranslatef(0, 0, 10);
+	modelChildShip();
+}
 
+// display callback
+void display_callback(void) {
+	double tmp[16];
+	int current_window;
 	// retrieve the currently active window
 	current_window = glutGetWindow();
 
 	// clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0, 0, 0, 0);
 
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your rendering code here! /////////////////////
@@ -407,64 +433,16 @@ void display_callback(void)
 	gluPerspective(70.0f,
 			float(glutGet(GLUT_WINDOW_WIDTH ))
 					/ float(glutGet(GLUT_WINDOW_HEIGHT )), 0.1f, 2000.0f);
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	gluLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
+			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
+	printf("pos %f %f %f view %f %f %f up %f %f %f \n", cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
+			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
+	glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
 
-	for (int x = 0; x < 9; x++)
-	{
-		if (isTimeProgressing)
-		{
-			updateDay(x);
-		}
-	}
-
-	Ship& ship = mother_ship;
-
-	ship.changeViewingMode();
-
-	//Draw the sun!
-	drawSun();
-
-	//Draw the planets!
-	drawPlanets();
-
-	//if (viewingMode == FLYING) {
-	glGetDoublev(GL_MODELVIEW_MATRIX, ship.currentMatrix);
-	//}
-
-	/*float m[16];
-	 for (int y = 0; y < 16; y++) {
-	 m[y] = otherShip.currentMatrix[y];
-	 }
-	 invert_pose(m);*/
-
-	//glMultMatrixf(m);
-	//if (isCurrentWindowScout) {
-	modelMotherShip();
-	//} else {
-	//	modelChildShip();
-	//}
-
-	glEnable(GL_TEXTURE_2D);
-
-	/* create a square on the XY
-	 note that OpenGL origin is at the lower left
-	 but texture origin is at upper left
-	 => it has to be mirrored
-	 (gasman knows why i have to mirror X as well) */
-	glBegin(GL_QUADS);
-	glNormal3f(0.0, 0.0, 1.0);
-	glTexCoord2d(1, 1);
-	glVertex3f(0.0, 0.0, 0.0);
-	glTexCoord2d(1, 0);
-	glVertex3f(0.0, 1.0, 0.0);
-	glTexCoord2d(0, 0);
-	glVertex3f(1.0, 1.0, 0.0);
-	glTexCoord2d(0, 1);
-	glVertex3f(1.0, 0.0, 0.0);
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
+	draw_scene();
 
 	// swap the front and back buffers to display the scene
 	glutSetWindow(current_window);
@@ -473,14 +451,12 @@ void display_callback(void)
 
 // not exactly a callback, but sets a timer to call itself
 // in an endless loop to update the program
-void idle(int value)
-{
+void idle(int value) {
 
 	// if the user wants to quit the program, then exit the
 	// function without resetting the timer or triggering
 	// a display update
-	if (is_quit)
-	{
+	if (is_quit) {
 		// cleanup any allocated memory
 		cleanup();
 
@@ -497,14 +473,15 @@ void idle(int value)
 	// request a redisplay
 	glutSetWindow(main_window);
 	glutPostRedisplay();
+	glutSetWindow(cam_window);
+	glutPostRedisplay();
 
 	// set a timer to call this function again after the
 	// required number of milliseconds
 	glutTimerFunc(dt, idle, 0);
 }
 
-void draw_title()
-{
+void draw_title() {
 	glEnable(GL_TEXTURE_2D);
 
 	/* create a square on the XY
@@ -514,36 +491,36 @@ void draw_title()
 	 (gasman knows why i have to mirror X as well) */
 
 	glBegin(GL_QUADS);
-	glColor3f(0,0,0);
+	glColor3f(0, 0, 0);
 
 	double rect_length_x;
 	double rect_length_y;
 
-	if (is_use_in_values)
-	{
+	if (is_use_in_values) {
 		rect_length_x = in_value[0];
 		rect_length_y = in_value[1];
-	}
-	else
-	{
+	} else {
 		rect_length_x = 1.0;
 		rect_length_y = 1.0;
 	}
 
 	glNormal3f(0.0, 0.0, 1.0);
 
-	glTexCoord2d(1, 1); glVertex3f(-rect_length_x, -rect_length_y, 0.0);
-	glTexCoord2d(1, 0); glVertex3f(-rect_length_x, rect_length_y, 0.0);
-	glTexCoord2d(0, 0); glVertex3f(rect_length_x, rect_length_y, 0.0);
-	glTexCoord2d(0, 1); glVertex3f(rect_length_x, -rect_length_y, 0.0);
+	glTexCoord2d(1, 1);
+	glVertex3f(-rect_length_x, -rect_length_y, 0.0);
+	glTexCoord2d(1, 0);
+	glVertex3f(-rect_length_x, rect_length_y, 0.0);
+	glTexCoord2d(0, 0);
+	glVertex3f(rect_length_x, rect_length_y, 0.0);
+	glTexCoord2d(0, 1);
+	glVertex3f(rect_length_x, -rect_length_y, 0.0);
 
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
 }
 
-void render()
-{
+void render() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	/* fov, aspect, near, far */
@@ -554,7 +531,7 @@ void render()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	glClearColor(0.2,0.2,0.2, 0.2);
+	glClearColor(0.2, 0.2, 0.2, 0.2);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPushAttrib(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -574,22 +551,16 @@ void render()
 /// Program Entry Point //////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 
-	if (argc == 4)
-	{
+	if (argc == 4) {
 		is_use_in_values = true;
-		for (int x = 1; x < 4; x++)
-		{
+		for (int x = 1; x < 4; x++) {
 			cout << "a" << argv[x];
 			in_value[x - 1] = strtod(argv[x], NULL);
 		}
-	}
-	else
-	{
-		for (int x = 0; x < 3; x++)
-		{
+	} else {
+		for (int x = 0; x < 3; x++) {
 			in_value[x] = 0;
 		}
 	}
@@ -597,6 +568,7 @@ int main(int argc, char **argv)
 	mother_ship = Ship();
 	child_ship = Ship();
 	child_ship.eyePoint[2] = 20;
+	cam = Camera();
 
 	// initialize glut
 	glutInit(&argc, argv);
@@ -614,15 +586,17 @@ int main(int argc, char **argv)
 	glutReshapeFunc(resize_callback);
 
 	// initialize the scout ship window
-	//glutInitWindowSize( disp_width, disp_height );
-	//glutInitWindowPosition( disp_width + 50, 100 );
-	/*scout_window = glutCreateWindow( "Scout Ship" );
-	 glutKeyboardFunc( keyboard_callback );
-	 glutDisplayFunc( display_callback );
-	 glutReshapeFunc( resize_callback );*/
+	glutInitWindowSize(disp_width, disp_height);
+	glutInitWindowPosition(disp_width + 50, 100);
+	cam_window = glutCreateWindow("Camera");
+	glutKeyboardFunc(keyboard_callback);
+	glutDisplayFunc(display_callback);
+	glutReshapeFunc(resize_callback);
+	glutPassiveMotionFunc(motion_callback);
 
 	glutSetWindow(main_window);
 	init();
+	glutSetWindow(cam_window);
 
 	texture = raw_texture_load("aurua.raw", 1772, 1772);
 

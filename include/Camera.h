@@ -17,6 +17,7 @@ public:
 	void set_up(double up_x, double up_y, double up_z);
 	void set_velocity(double vel_x, double vel_y, double vel_z);
 	void rotate_view(double x, double y, double z);
+	double* get_gaze();
 
 	double pos[3];
 	double view[3];

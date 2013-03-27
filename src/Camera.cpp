@@ -6,7 +6,8 @@
  */
 #include "Camera.h"
 
-Camera::Camera() {
+Camera::Camera() :
+		pos { 0, 0, 0 }, up { 0, 1, 0 }, view { 0, 0, 1 }, vel { 0, 0, 0 } {
 	// TODO Auto-generated constructor stub
 }
 
@@ -25,4 +26,5 @@ void Camera::set_velocity(double vel_x, double vel_y, double vel_z) {
 	vel[1] = vel_y;
 	vel[2] = vel_z;
 }
+
 
