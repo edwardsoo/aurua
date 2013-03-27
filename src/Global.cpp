@@ -30,6 +30,9 @@ void toggleTime() {
 	isTimeProgressing = !isTimeProgressing;
 }
 
+/**
+ * From http://en.wikibooks.org/wiki/OpenGL_Programming/Intermediate/Textures
+ */
 GLuint raw_texture_load(const char *filename, int width, int height)
 {
 	GLuint texture;
