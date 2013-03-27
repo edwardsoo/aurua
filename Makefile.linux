@@ -1,9 +1,10 @@
 CCFLAGS = -g -pg
 
-default: P2
+default: aurua
+all: aurua
 
 P2: main.cpp
-	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp -o P2 \
+	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp ship.cpp global.cpp -o game \
 		-lGL -lGLU -lglut
 
 clean:
