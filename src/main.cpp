@@ -129,20 +129,6 @@ void resize_callback(int width, int height) {
 	glutPostRedisplay();
 }
 
-void drawAxis() {
-	glBegin(GL_LINES);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex3f(0.0f, 0.0f, 1.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glEnd();
-}
-
 /*void resetCurrentMatrix() {
  for (int x = 0; x < 16; x++) {
  currentMatrix[x] = 0;

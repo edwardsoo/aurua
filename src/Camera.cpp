@@ -7,7 +7,7 @@
 #include "Camera.h"
 #include "Vec3.h"
 #include <math.h>
-#include<stdio.h>
+#include <stdio.h>
 
 Camera::Camera() {
 	// TODO Auto-generated constructor stub
