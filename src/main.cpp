@@ -224,22 +224,7 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_speed * dx / disp_width;
 		double y_rad = cam_speed * dy / disp_height;
 
-		// First rotate in xz plane
-		cam.view.z = (sin(x_rad) * cam.view.x + cos(x_rad) * cam.view.z);
-		cam.view.x = (cos(x_rad) * cam.view.x - sin(x_rad) * cam.view.z);
-
-		// Then change y component and update x and z
-		// TODO there is some bug in here, should cap view vector with a cone at extreme y
-		Vec3 view_xz = Vec3(cam.view.z, 0, cam.view.z);
-		double no_y_xz_len = view_xz.length();
-		cam.view.y = cos(y_rad) * cam.view.y - sin(y_rad) * no_y_xz_len;
-		double xz_len = fabs(
-				sin(y_rad) * cam.view.y + cos(y_rad) * no_y_xz_len);
-
-		cam.view.x *= xz_len / no_y_xz_len;
-		cam.view.z *= xz_len / no_y_xz_len;
-
-		cam.view.normalize();
+		cam.rotate_view(x_rad, y_rad);
 
 		if (dx != 0 || dy != 0) {
 			printf("dx=%f dy=%f ", x_rad, y_rad);

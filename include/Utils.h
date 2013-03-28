@@ -93,7 +93,7 @@ void draw_grid() {
 	float unit = 5;
 	for (float i = -limit; i <= limit; i += unit) {
 		glBegin (GL_LINES);
-		glColor4f(0.5, 0.5, 0.5, 0.5);
+		glColor4f(1, 1, 1, 0.5);
 		glVertex3f(-limit, 0, i);
 		glVertex3f(limit, 0, i);
 		glVertex3f(i, 0, -limit);
