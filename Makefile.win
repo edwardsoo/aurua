@@ -1,11 +1,30 @@
-CCFLAGS = -g -pg
+IDIR =./include
+CC=g++
+CFLAGS=-I$(IDIR)
 
-default: aurua
+ODIR =.
+SDIR =./src
+
+LIBS=-lopengl32 -lGLU32 -lglut32
+
+_DEPS = Camera.h Global.h Header.h Ship.h ViewingMode.h Vec3.h
+DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+
+
+_OBJ = Camera.o main.o Ship.o Global.o
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+
+$(ODIR)/%.o: $(SDIR)/%.cpp
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $< 
+
 all: aurua
 
-aurua:
-	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp ship.cpp global.cpp -o bin/aurua.exe \
-		-lglut32 -lopengl32 -lglu32
+aurua: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+.PHONY: clean
 
 clean:
-	rm -rf bin/*
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ aurua
+
