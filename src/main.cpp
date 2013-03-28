@@ -110,7 +110,6 @@ void cleanup() {
 
 const int DIMENSIONS = 3;
 
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Callback Stubs ///////////////////////////////////////////////
@@ -181,12 +180,11 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_speed * dx / disp_width;
 		double y_rad = cam_speed * dy / disp_height;
 
-		Vec3 view = cam.center - cam.pos;
-		view.normalize();
-		cam.center.z = cam.pos.z + (sin(x_rad) * view.x + cos(x_rad) * view.z);
-		cam.center.x = cam.pos.x + (cos(x_rad) * view.x - sin(x_rad) * view.z);
-		cam.center.z = cam.pos.z + (sin(y_rad) * view.y + cos(y_rad) * view.z);
-		cam.center.y = cam.pos.z + (cos(y_rad) * view.y - sin(y_rad) * view.z);
+		Vec3 view_xz = Vec3(cam.view.z, 0, cam.view.z);
+		cam.view.z = (sin(x_rad) * cam.view.x + cos(x_rad) * cam.view.z);
+		cam.view.x = (cos(x_rad) * cam.view.x - sin(x_rad) * cam.view.z);
+		cam.view.y = (cos(y_rad) * cam.view.y - sin(y_rad) * view_xz.length());
+		cam.view.normalize();
 	}
 }
 
@@ -204,9 +202,12 @@ void modelChildShip() {
 }
 
 void draw_scene() {
+	glPushMatrix();
 	glColor3f(1, 1, 1);
-	glTranslatef(0, 0, 10);
+	glTranslatef(0, 5, 10);
 	modelChildShip();
+	glPopMatrix();
+	draw_grid();
 }
 
 // display callback
@@ -225,8 +226,9 @@ void display_callback(void) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(cam.pos.x, cam.pos.y, cam.pos.z, cam.center.x, cam.center.y,
-			cam.center.z, cam.up.x, cam.up.y, cam.up.z);
+	Vec3 center = cam.pos + cam.view;
+	gluLookAt(cam.pos.x, cam.pos.y, cam.pos.z, center.x, center.y, center.z,
+			cam.up.x, cam.up.y, cam.up.z);
 	draw_scene();
 
 	/*
@@ -235,24 +237,6 @@ void display_callback(void) {
 	 */
 	glutSetWindow(current_window);
 	glutSwapBuffers();
-}
-
-
-void idle() {
-	if (is_quit) {
-		// cleanup any allocated memory
-		cleanup();
-		// perform hard exit of the program, since glutMainLoop()
-		// will never return
-		exit(0);
-	}
-
-	glutSetWindow(main_window);
-	glutPostRedisplay();
-
-	glutSetWindow(cam_window);
-	glutPostRedisplay();
-
 }
 
 void draw_title() {
@@ -320,6 +304,23 @@ void render() {
 	glutSwapBuffers();
 }
 
+void idle() {
+	if (is_quit) {
+		// cleanup any allocated memory
+		cleanup();
+		// perform hard exit of the program, since glutMainLoop()
+		// will never return
+		exit(0);
+	}
+
+	glutSetWindow(main_window);
+	glutPostRedisplay();
+
+	glutSetWindow(cam_window);
+	glutPostRedisplay();
+
+}
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Program Entry Point //////////////////////////////////////////
@@ -340,8 +341,8 @@ int main(int argc, char **argv) {
 	}
 
 	cam = Camera();
-	cam.pos = Vec3(0, 0, 0);
-	cam.center = Vec3(0, 0, 1);
+	cam.pos = Vec3(0, 5, 0);
+	cam.view = Vec3(0, 0, 1);
 	cam.up = Vec3(0, 1, 0);
 
 	// initialize glut

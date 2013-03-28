@@ -75,5 +75,18 @@ bool invert_pose(float *m) {
 	return true;
 }
 
+void draw_grid() {
+	float limit = 1000;
+	float unit = 5;
+	for (float i = -limit; i <= limit; i += unit) {
+		glBegin (GL_LINES);
+		glColor4f(0.5, 0.5, 0.5, 0.5);
+		glVertex3f(-limit, 0, i);
+		glVertex3f(limit, 0, i);
+		glVertex3f(i, 0, -limit);
+		glVertex3f(i, 0, limit);
+		glEnd();
+	}
+}
 
 #endif /* UTILS_H_ */
