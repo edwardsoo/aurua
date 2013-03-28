@@ -41,6 +41,10 @@ using namespace std;
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
 
+// Keys variables
+bool shift_held = false;
+bool* keyStates = new bool[256];
+
 // window handles for mother ship and scout ship
 int main_window, cam_window;
 
@@ -159,6 +163,60 @@ void keyboard_callback(unsigned char key, int x, int y) {
 	}
 }
 
+void cam_keyboard_callback(unsigned char key, int x, int y) {
+	int modifier = glutGetModifiers();
+	if (modifier & GLUT_ACTIVE_SHIFT) {
+		printf("shift pressed\n");
+		fflush(stdout);
+		shift_held = true;
+	} else {
+		shift_held = false;
+	}
+	keyStates[key] = true;
+}
+
+void cam_keyup_callback(unsigned char key, int x, int y) {
+	int modifier = glutGetModifiers();
+	if (modifier & GLUT_ACTIVE_SHIFT) {
+		shift_held = true;
+	} else {
+		shift_held = false;
+	}
+	keyStates[key] = false;
+}
+
+void keys_consumer() {
+	if (keyStates[27]) {
+		is_quit = true;
+		return;
+	}
+
+	double speed = shift_held ? 0.03 : 0.015;
+	// Camera view relative vectors
+	Vec3 cam_f(cam.view.x, 0, cam.view.z);
+	cam_f.normalize();
+	Vec3 cam_r = cam_f.cross(cam.up);
+	cam_r.normalize();
+
+	Vec3 cam_dir(0, 0, 0);
+	if (keyStates['w']) {
+		cam_dir += cam_f;
+	} else if (keyStates['s']) {
+		cam_dir -= cam_f;
+	}
+	if (keyStates['d']) {
+		cam_dir += cam_r;
+	} else if (keyStates['a']) {
+		cam_dir -= cam_r;
+	}
+	if (cam_dir != Vec3(0, 0, 0)) {
+		// debug_vec3(&cam_dir);
+		cam_dir.normalize();
+	}
+
+	cam.pos += cam_dir * speed;
+}
+
 // motion callback
 void motion_callback(int x, int y) {
 	int current_window = glutGetWindow();
@@ -171,7 +229,7 @@ void motion_callback(int x, int y) {
 		dx = x - mid_x;
 		dy = y - mid_y;
 
-		// glutWrapPointer has a bug where it may call the MotionCallback again
+// glutWrapPointer has a bug where it may call the MotionCallback again
 		if (dx == 0 && dy == 0) {
 			return;
 		}
@@ -180,11 +238,28 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_speed * dx / disp_width;
 		double y_rad = cam_speed * dy / disp_height;
 
-		Vec3 view_xz = Vec3(cam.view.z, 0, cam.view.z);
+		// First rotate in xz plane
 		cam.view.z = (sin(x_rad) * cam.view.x + cos(x_rad) * cam.view.z);
 		cam.view.x = (cos(x_rad) * cam.view.x - sin(x_rad) * cam.view.z);
-		cam.view.y = (cos(y_rad) * cam.view.y - sin(y_rad) * view_xz.length());
+
+		// Then change y component and update x and z
+		// TODO there is some bug in here, should cap view vector with a cone at extreme y
+		Vec3 view_xz = Vec3(cam.view.z, 0, cam.view.z);
+		double no_y_xz_len = view_xz.length();
+		cam.view.y = cos(y_rad) * cam.view.y - sin(y_rad) * no_y_xz_len;
+		double xz_len = fabs(
+				sin(y_rad) * cam.view.y + cos(y_rad) * no_y_xz_len);
+
+		cam.view.x *= xz_len / no_y_xz_len;
+		cam.view.z *= xz_len / no_y_xz_len;
+
 		cam.view.normalize();
+
+		if (dx != 0 || dy != 0) {
+			printf("dx=%f dy=%f ", x_rad, y_rad);
+			debug_vec3(&cam.view);
+			fflush(stdout);
+		}
 	}
 }
 
@@ -214,8 +289,9 @@ void draw_scene() {
 void display_callback(void) {
 	double tmp[16];
 	int current_window = glutGetWindow();
+	keys_consumer();
 
-	// clear the color and depth buffers
+// clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
@@ -306,10 +382,10 @@ void render() {
 
 void idle() {
 	if (is_quit) {
-		// cleanup any allocated memory
+// cleanup any allocated memory
 		cleanup();
-		// perform hard exit of the program, since glutMainLoop()
-		// will never return
+// perform hard exit of the program, since glutMainLoop()
+// will never return
 		exit(0);
 	}
 
@@ -345,13 +421,13 @@ int main(int argc, char **argv) {
 	cam.view = Vec3(0, 0, 1);
 	cam.up = Vec3(0, 1, 0);
 
-	// initialize glut
+// initialize glut
 	glutInit(&argc, argv);
 
-	// use double-buffered RGB+Alpha framebuffers with a depth buffer.
+// use double-buffered RGB+Alpha framebuffers with a depth buffer.
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
-	// initialize the mothership window
+// initialize the mothership window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(0, 100);
 	main_window = glutCreateWindow("AURUA");
@@ -359,11 +435,12 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(render);
 	glutReshapeFunc(resize_callback);
 
-	// initialize the camera window
+// initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(disp_width + 50, 100);
 	cam_window = glutCreateWindow("Camera");
-	glutKeyboardFunc(keyboard_callback);
+	glutKeyboardFunc(cam_keyboard_callback);
+	glutKeyboardUpFunc(cam_keyup_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
 	glutPassiveMotionFunc(motion_callback);
@@ -372,13 +449,14 @@ int main(int argc, char **argv) {
 	glutSetWindow(main_window);
 	init();
 	glutSetWindow(cam_window);
+	glutSetCursor(GLUT_CURSOR_NONE);
 	init();
 
 	texture = raw_texture_load("aurua.raw", 1772, 1772);
 
 	glutIdleFunc(idle);
 
-	// start the main loop
+// start the main loop
 	glutMainLoop();
 
 	return 0;

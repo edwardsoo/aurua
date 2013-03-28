@@ -9,6 +9,19 @@ void printMatrix(double* m) {
 
 }
 
+// debug camera
+void debug_camera(Camera* cam) {
+	printf("pos %f %f %f\n", cam->pos.x, cam->pos.y, cam->pos.z);
+	printf("view %f %f %f\n", cam->view.x, cam->view.y, cam->view.z);
+	printf("up %f %f %f\n", cam->up.x, cam->up.y, cam->up.z);
+	printf("vel %f %f %f\n", cam->vel.x, cam->vel.y, cam->vel.z);
+}
+
+// debug Vec3
+void debug_vec3(Vec3 *vec) {
+	printf("x=%f y=%f z=%f\n", vec->x, vec->y, vec->z);
+}
+
 // inversion routine originally from MESA
 bool invert_pose(float *m) {
 	float inv[16], det;

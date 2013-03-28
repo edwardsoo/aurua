@@ -17,18 +17,3 @@ Camera::~Camera() {
 	// TODO Auto-generated destructor stub
 }
 
-void Camera::set_position(Vec3 _pos) {
-	pos = _pos;
-}
-
-void Camera::set_velocity(Vec3 _vel) {
-	vel = _vel;
-}
-
-void Camera::debug() {
-	printf("pos %f %f %f\n", pos.x, pos.y, pos.z);
-	printf("center %f %f %f\n", view.x, view.y, view.z);
-	printf("up %f %f %f\n", up.x, up.y, up.z);
-	printf("vel %f %f %f\n", vel.x, vel.y, vel.z);
-}
-

@@ -13,13 +13,6 @@ class Camera {
 public:
 	Camera();
 	~Camera();
-	void set_position(Vec3);
-	void set_view(Vec3);
-	void set_up(Vec3);
-	void set_velocity(Vec3);
-	void rotate_view(Vec3);
-	double* get_gaze();
-	void debug();
 
 	Vec3 pos;
 	Vec3 view;
