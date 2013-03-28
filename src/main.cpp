@@ -24,6 +24,7 @@
 #include "Global.h"
 #include "Camera.h"
 #include "Vec3.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ using namespace std;
 
 // time increment between calls to idle() in ms,
 // currently set to 30 FPS
-float dt = 1000.0f * 1.0f / 60.0f;
+//float dt = 1000.0f * 1.0f / 60.0f;
 
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
@@ -48,8 +49,6 @@ static GLuint texture;
 // display width and height
 int disp_width = 800, disp_height = 640;
 
-Ship mother_ship;
-Ship child_ship;
 Camera cam;
 
 // Cursor previous position
@@ -58,6 +57,7 @@ int prev_x, prev_y;
 //Cool debug tool! Use command line arguments to pass in ints!
 bool is_use_in_values = false;
 double in_value[3];
+double cam_speed = 1.0;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Initialization/Setup and Teardown ////////////////////////////
@@ -110,8 +110,6 @@ void cleanup() {
 
 const int DIMENSIONS = 3;
 
-// inversion routine originally from MESA
-bool invert_pose(float *m);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -160,45 +158,37 @@ void keyboard_callback(unsigned char key, int x, int y) {
 	default:
 		break;
 	}
-	mother_ship.keyboardCallback(key);
 }
 
 // motion callback
 void motion_callback(int x, int y) {
-	int current_window;
+	int current_window = glutGetWindow();
 	double dx, dy;
-	GLint vp[4];
 
-	glGetIntegerv(GL_VIEWPORT, vp);
-	int mid_x = vp[2] >> 1;
-	int mid_y = vp[3] >> 1;
+	if (current_window == cam_window) {
+		int mid_x = glutGet(GLUT_WINDOW_WIDTH ) >> 1;
+		int mid_y = glutGet(GLUT_WINDOW_HEIGHT ) >> 1;
 
-	dx = x - mid_x;
-	dy = y - mid_y;
+		dx = x - mid_x;
+		dy = y - mid_y;
 
-	glutWarpPointer(mid_x, mid_y);
+		// glutWrapPointer has a bug where it may call the MotionCallback again
+		if (dx == 0 && dy == 0) {
+			return;
+		}
+		glutWarpPointer(mid_x, mid_y);
 
-/*
-	if (dx != 0 || dy != 0) {
-		printf("current window: %d\n", current_window);
-		printf("x=%d y=%d prev_x=%d prev_y=%d dx=%f dy=%f\n", x, y, prev_x,
-				prev_y, dx, dy);
-		printf("cam view: %f, %f, %f\n", cam.view[0], cam.view[1], cam.view[2]);
-	}*/
+		double x_rad = cam_speed * dx / disp_width;
+		double y_rad = cam_speed * dy / disp_height;
 
-	double x_rad = dx / disp_width;
-	double y_rad = dy / disp_height;
-
-	cam.view[2] = cam.pos[2] + (sin(x_rad) * gaze[0] + cos(x_rad) * gaze[2]);
-	cam.view[0] = cam.pos[0] + (cos(x_rad) * gaze[0] - sin(x_rad) * gaze[2]);
-	cam.view[2] = cam.pos[2] + (sin(y_rad) * gaze[1] + cos(y_rad) * gaze[2]);
-	cam.view[1] = cam.pos[0] + (cos(y_rad) * gaze[1] - sin(y_rad) * gaze[2]);
-
-//	printf("viewport: %d %d %d %d, pos_x %d pos_y %d\n", vp[0], vp[1], vp[2],
-//			vp[3], pos_x, pos_y);
-	glutPostRedisplay();
+		Vec3 view = cam.center - cam.pos;
+		view.normalize();
+		cam.center.z = cam.pos.z + (sin(x_rad) * view.x + cos(x_rad) * view.z);
+		cam.center.x = cam.pos.x + (cos(x_rad) * view.x - sin(x_rad) * view.z);
+		cam.center.z = cam.pos.z + (sin(y_rad) * view.y + cos(y_rad) * view.z);
+		cam.center.y = cam.pos.z + (cos(y_rad) * view.y - sin(y_rad) * view.z);
+	}
 }
-
 
 void modelChildShip() {
 	glPushMatrix();
@@ -222,17 +212,11 @@ void draw_scene() {
 // display callback
 void display_callback(void) {
 	double tmp[16];
-	int current_window;
-	// retrieve the currently active window
-	current_window = glutGetWindow();
+	int current_window = glutGetWindow();
 
 	// clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0, 0, 0, 0);
 
-	/////////////////////////////////////////////////////////////
-	/// TODO: Put your rendering code here! /////////////////////
-	/////////////////////////////////////////////////////////////
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(70.0f,
@@ -241,49 +225,31 @@ void display_callback(void) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
-			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
-	/*
-	printf("pos %f %f %f view %f %f %f up %f %f %f \n", cam.pos[0], cam.pos[1],
-				cam.pos[2], cam.view[0], cam.view[1], cam.view[2], cam.up[0],
-				cam.up[1], cam.up[2]);
-*/
-
-	glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
-	printf("%f %f %f %f\n%f %f %f %f\n %f %f %f %f\n%f %f %f %f\n\n", 
-	tmp[0], tmp[4], tmp[8], tmp[12], tmp[1], tmp[5], tmp[9], tmp[13],tmp[2], tmp[6], tmp[10], tmp[14],
-	tmp[3], tmp[7], tmp[11], tmp[15]);
-
+	gluLookAt(cam.pos.x, cam.pos.y, cam.pos.z, cam.center.x, cam.center.y,
+			cam.center.z, cam.up.x, cam.up.y, cam.up.z);
 	draw_scene();
 
-	// swap the front and back buffers to display the scene
-	//glutSetWindow(current_window);
+	/*
+	 glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
+	 printMatrix(tmp);
+	 */
+	glutSetWindow(current_window);
+	glutSwapBuffers();
 }
 
-// not exactly a callback, but sets a timer to call itself
-// in an endless loop to update the program
-void idle() {
 
-	// if the user wants to quit the program, then exit the
-	// function without resetting the timer or triggering
-	// a display update
+void idle() {
 	if (is_quit) {
 		// cleanup any allocated memory
 		cleanup();
-
 		// perform hard exit of the program, since glutMainLoop()
 		// will never return
 		exit(0);
 	}
 
-	/////////////////////////////////////////////////////////////
-	/// TODO: Put your idle code here! //////////////////////////
-	/////////////////////////////////////////////////////////////
-
-	// set the currently active window to the mothership and
-	// request a redisplay
 	glutSetWindow(main_window);
 	glutPostRedisplay();
+
 	glutSetWindow(cam_window);
 	glutPostRedisplay();
 
@@ -374,6 +340,9 @@ int main(int argc, char **argv) {
 	}
 
 	cam = Camera();
+	cam.pos = Vec3(0, 0, 0);
+	cam.center = Vec3(0, 0, 1);
+	cam.up = Vec3(0, 1, 0);
 
 	// initialize glut
 	glutInit(&argc, argv);
@@ -387,10 +356,7 @@ int main(int argc, char **argv) {
 	main_window = glutCreateWindow("AURUA");
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(render);
-	//glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
-	glutSetWindow(main_window);
-	init();
 
 	// initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
@@ -399,80 +365,20 @@ int main(int argc, char **argv) {
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
+	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
+
+	glutSetWindow(main_window);
+	init();
 	glutSetWindow(cam_window);
+	init();
 
 	texture = raw_texture_load("aurua.raw", 1772, 1772);
 
 	glutIdleFunc(idle);
 
-	// start the blug main loop
+	// start the main loop
 	glutMainLoop();
 
 	return 0;
-}
-
-bool invert_pose(float *m) {
-	float inv[16], det;
-	int i;
-
-	inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
-			+ m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-
-	inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
-			- m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-
-	inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
-			+ m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-
-	inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
-			- m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-
-	inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
-			- m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-
-	inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
-			+ m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-
-	inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
-			- m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-
-	inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
-			+ m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-
-	inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
-			+ m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-
-	inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
-			- m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
-
-	inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
-			+ m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-
-	inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
-			- m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-
-	inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
-			- m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
-
-	inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
-			+ m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-
-	inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
-			- m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
-
-	inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
-			+ m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-	if (det == 0)
-		return false;
-
-	det = 1.0 / det;
-
-	for (i = 0; i < 16; i++)
-		m[i] = inv[i] * det;
-
-	return true;
 }
