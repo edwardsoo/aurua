@@ -7,7 +7,7 @@ SDIR =./src
 
 LIBS=-lGL -lGLU -lglut
 
-_DEPS = Camera.h Global.h Header.h Ship.h ViewingMode.h
+_DEPS = Camera.h Global.h Header.h Ship.h ViewingMode.h Vec3.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 

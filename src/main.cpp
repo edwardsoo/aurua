@@ -23,6 +23,7 @@
 #include "Ship.h"
 #include "Global.h"
 #include "Camera.h"
+#include "Vec3.h"
 
 using namespace std;
 
@@ -110,70 +111,7 @@ void cleanup() {
 const int DIMENSIONS = 3;
 
 // inversion routine originally from MESA
-bool invert_pose(float *m) {
-	float inv[16], det;
-	int i;
-
-	inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
-			+ m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-
-	inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
-			- m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-
-	inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
-			+ m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-
-	inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
-			- m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-
-	inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
-			- m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-
-	inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
-			+ m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-
-	inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
-			- m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-
-	inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
-			+ m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-
-	inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
-			+ m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-
-	inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
-			- m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
-
-	inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
-			+ m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-
-	inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
-			- m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-
-	inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
-			- m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
-
-	inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
-			+ m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-
-	inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
-			- m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
-
-	inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
-			+ m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-	if (det == 0)
-		return false;
-
-	det = 1.0 / det;
-
-	for (i = 0; i < 16; i++)
-		m[i] = inv[i] * det;
-
-	return true;
-}
+bool invert_pose(float *m);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -240,18 +178,14 @@ void motion_callback(int x, int y) {
 
 	glutWarpPointer(mid_x, mid_y);
 
-	// retrieve the currently active window
-	current_window = glutGetWindow();
+/*
 	if (dx != 0 || dy != 0) {
 		printf("current window: %d\n", current_window);
 		printf("x=%d y=%d prev_x=%d prev_y=%d dx=%f dy=%f\n", x, y, prev_x,
 				prev_y, dx, dy);
-	}
+		printf("cam view: %f, %f, %f\n", cam.view[0], cam.view[1], cam.view[2]);
+	}*/
 
-	double gaze[3];
-	gaze[0] = cam.view[0] - cam.pos[0];
-	gaze[1] = cam.view[1] - cam.pos[1];
-	gaze[2] = cam.view[2] - cam.pos[2];
 	double x_rad = dx / disp_width;
 	double y_rad = dy / disp_height;
 
@@ -260,142 +194,11 @@ void motion_callback(int x, int y) {
 	cam.view[2] = cam.pos[2] + (sin(y_rad) * gaze[1] + cos(y_rad) * gaze[2]);
 	cam.view[1] = cam.pos[0] + (cos(y_rad) * gaze[1] - sin(y_rad) * gaze[2]);
 
-//	int pos_x = glutGet((GLenum) GLUT_WINDOW_X );
-//	int pos_y = glutGet((GLenum) GLUT_WINDOW_Y );
-
-
 //	printf("viewport: %d %d %d %d, pos_x %d pos_y %d\n", vp[0], vp[1], vp[2],
 //			vp[3], pos_x, pos_y);
-//	printf("cam view: %f, %f, %f\n", cam.view[0], cam.view[1], cam.view[2]);
+	glutPostRedisplay();
 }
 
-void drawSun() {
-	glColor3f(1.0f, 1.0f, 0.0f);
-	glPushMatrix();
-	glRotatef(progress[2] * 360, 0, 1.0, 0);
-	glutSolidSphere(1, 20, 20);
-	glPopMatrix();
-}
-
-void switchColorFromPlanet(int planet, bool isTransparent) {
-	float r;
-	float g;
-	float b;
-
-	switch (planet) {
-	case 0: //Mercury
-		r = .5;
-		g = .8;
-		b = .5;
-		break;
-	case 1: //Venus
-		r = .9;
-		g = .8;
-		b = .2;
-		break;
-	case 2: //Earth
-		r = 0;
-		g = .2;
-		b = .6;
-		break;
-	case 3: //Mars
-		r = .8;
-		g = .2;
-		b = .2;
-		break;
-	case 4: // Jupiter
-		r = .5;
-		g = .5;
-		b = .1;
-		break;
-	case 5: //Saturn
-		r = .8;
-		g = .8;
-		b = .2;
-		break;
-	case 6: //Uranus
-		r = .1;
-		g = .1;
-		b = .5;
-		break;
-	case 7: //Neptune
-		r = .7;
-		g = .7;
-		b = 1;
-		break;
-	case 8: //Pluto
-		r = .8;
-		g = .8;
-		b = .8;
-		break;
-	}
-
-	if (isTransparent) {
-		glColor4f(r, g, b, 0.4);
-	} else {
-		glColor3f(r, g, b);
-	}
-}
-
-void drawMoon() {
-	glPushMatrix();
-	glRotatef(2 * progress[2] * 360, 0, 0, 1.0);
-	glTranslatef(.8f, 0, 0);
-	glRotatef(progress[2] * 360, 1, 1.0, 0);
-	glColor3f(.9f, .9f, .9f);
-	glutSolidSphere(.1, 10, 10);
-	glPopMatrix();
-}
-
-void drawSaturnsRings() {
-	glPushMatrix();
-	glRotatef(45, 0, 0, 1);
-	glScalef(1, 0.02f, 1);
-	glColor3f(1, 1, 1);
-	glutSolidSphere(1.2, 20, 10);
-	glPopMatrix();
-}
-
-void drawRing(int planet) {
-	glPushMatrix();
-	glRotatef(90, 1, 0, 0);
-	float where = getPlanetLocation(planet);
-	gluDisk(gluNewQuadric(), where, where + .2, 180, 2);
-	glPopMatrix();
-}
-
-void drawPlanets() {
-	for (int x = 0; x < 9; x++) {
-		glPushMatrix();
-		if (isTimeProgressing) {
-			updateDay(x);
-		}
-		switchColorFromPlanet(x, true);
-		drawRing(x);
-		glRotatef(progress[x] * 360, 0, 1.0, 0);
-		glTranslatef(getPlanetLocation(x), 0, 0);
-		if (x == 2) {
-			//Earth, draw moon.
-			drawMoon();
-		} else if (x == 5) {
-			drawSaturnsRings();
-		}
-		switchColorFromPlanet(x, false);
-		glRotatef(progress[x] * 360, .1, .9, 0);
-
-		glutSolidSphere(.5, 20, 20);
-		glPopMatrix();
-	}
-}
-
-void modelMotherShip() {
-	glPushMatrix();
-	glutSolidCube(1);
-	glTranslatef(0, 0, -.5);
-	glColor3f(0, 0, 1);
-	glutSolidSphere(.5, 20, 20);
-	glPopMatrix();
-}
 
 void modelChildShip() {
 	glPushMatrix();
@@ -440,21 +243,26 @@ void display_callback(void) {
 	glLoadIdentity();
 	gluLookAt(cam.pos[0], cam.pos[1], cam.pos[2], cam.view[0], cam.view[1],
 			cam.view[2], cam.up[0], cam.up[1], cam.up[2]);
+	/*
 	printf("pos %f %f %f view %f %f %f up %f %f %f \n", cam.pos[0], cam.pos[1],
-			cam.pos[2], cam.view[0], cam.view[1], cam.view[2], cam.up[0],
-			cam.up[1], cam.up[2]);
+				cam.pos[2], cam.view[0], cam.view[1], cam.view[2], cam.up[0],
+				cam.up[1], cam.up[2]);
+*/
+
 	glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
+	printf("%f %f %f %f\n%f %f %f %f\n %f %f %f %f\n%f %f %f %f\n\n", 
+	tmp[0], tmp[4], tmp[8], tmp[12], tmp[1], tmp[5], tmp[9], tmp[13],tmp[2], tmp[6], tmp[10], tmp[14],
+	tmp[3], tmp[7], tmp[11], tmp[15]);
 
 	draw_scene();
 
 	// swap the front and back buffers to display the scene
-	glutSetWindow(current_window);
-	glutSwapBuffers();
+	//glutSetWindow(current_window);
 }
 
 // not exactly a callback, but sets a timer to call itself
 // in an endless loop to update the program
-void idle(int value) {
+void idle() {
 
 	// if the user wants to quit the program, then exit the
 	// function without resetting the timer or triggering
@@ -479,9 +287,6 @@ void idle(int value) {
 	glutSetWindow(cam_window);
 	glutPostRedisplay();
 
-	// set a timer to call this function again after the
-	// required number of milliseconds
-	glutTimerFunc(dt, idle, 0);
 }
 
 void draw_title() {
@@ -568,9 +373,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	mother_ship = Ship();
-	child_ship = Ship();
-	child_ship.eyePoint[2] = 20;
 	cam = Camera();
 
 	// initialize glut
@@ -587,27 +389,90 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(render);
 	//glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
+	glutSetWindow(main_window);
+	init();
 
-	// initialize the scout ship window
+	// initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(disp_width + 50, 100);
 	cam_window = glutCreateWindow("Camera");
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
-	glutPassiveMotionFunc(motion_callback);
-
-	glutSetWindow(main_window);
-	init();
+	glutMotionFunc(motion_callback);
 	glutSetWindow(cam_window);
 
 	texture = raw_texture_load("aurua.raw", 1772, 1772);
 
-	// start the idle on a fixed timer callback
-	idle(0);
+	glutIdleFunc(idle);
 
 	// start the blug main loop
 	glutMainLoop();
 
 	return 0;
+}
+
+bool invert_pose(float *m) {
+	float inv[16], det;
+	int i;
+
+	inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15]
+			+ m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+
+	inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15]
+			- m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+
+	inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15]
+			+ m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+
+	inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14]
+			- m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+
+	inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15]
+			- m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+
+	inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15]
+			+ m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+
+	inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15]
+			- m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+
+	inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14]
+			+ m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+
+	inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15]
+			+ m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+
+	inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15]
+			- m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+
+	inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15]
+			+ m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+
+	inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14]
+			- m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+
+	inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11]
+			- m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+
+	inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11]
+			+ m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+
+	inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11]
+			- m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+
+	inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10]
+			+ m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+	det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+	if (det == 0)
+		return false;
+
+	det = 1.0 / det;
+
+	for (i = 0; i < 16; i++)
+		m[i] = inv[i] * det;
+
+	return true;
 }

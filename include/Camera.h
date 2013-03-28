@@ -7,21 +7,19 @@
 
 #ifndef CAMERA_H_
 #define CAMERA_H_
+#include "Vec3.h"
 
 class Camera {
 public:
 	Camera();
 	~Camera();
-	void set_position(double pos_x, double pos_y, double pos_z);
-	void set_view(double view_x, double view_y, double view_z);
-	void set_up(double up_x, double up_y, double up_z);
-	void set_velocity(double vel_x, double vel_y, double vel_z);
-	void rotate_view(double x, double y, double z);
+	void set_position(Vec3);
+	void set_view(Vec3);
+	void set_up(Vec3);
+	void set_velocity(Vec3);
+	void rotate_view(Vec3);
 	double* get_gaze();
 
-	double pos[3];
-	double view[3];
-	double up[3];
-	double vel[3];
+	Vec3 pos, view, up, vel;
 };
 #endif /* CAMERA_H_ */
