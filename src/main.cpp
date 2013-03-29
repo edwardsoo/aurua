@@ -19,6 +19,7 @@
 #include<stdio.h>
 #include<math.h>
 
+#include "JPEG.h"
 #include "ViewingMode.h"
 #include "Ship.h"
 #include "Global.h"
@@ -42,7 +43,9 @@ using namespace std;
 bool is_quit = false;
 
 // Keys variables
-bool* keyStates = new bool[256];
+bool key_states[256];
+
+bool special_states[256];
 
 // window handles
 int main_window, cam_window;
@@ -51,6 +54,7 @@ int frame_passed = 0;
 char win_title[32] = { 0 };
 
 static GLuint texture;
+unsigned int texture_array[3];
 
 // display width and height
 int disp_width = 800, disp_height = 640;
@@ -151,16 +155,21 @@ void keyboard_callback(unsigned char key, int x, int y) {
 	}
 }
 
+void special_key_callback(int key, int x, int y) {
+	special_states[key] = !special_states[key];
+}
+
 void cam_keyboard_callback(unsigned char key, int x, int y) {
-	keyStates[key] = true;
+	key_states[key] = true;
 }
 
 void cam_keyup_callback(unsigned char key, int x, int y) {
-	keyStates[key] = false;
+	key_states[key] = false;
+	fflush(stdout);
 }
 
 void keys_consumer() {
-	if (keyStates[27]) {
+	if (key_states[27]) {
 		is_quit = true;
 		return;
 	}
@@ -174,20 +183,25 @@ void keys_consumer() {
 #endif
 
 	// Camera view relative vectors
-	Vec3 cam_f(cam.view.x, 0, cam.view.z);
+	Vec3 cam_f;
+	if (!special_states[GLUT_KEY_F1]) {
+		cam_f = Vec3(cam.view.x, 0, cam.view.z);
+	} else {
+		cam_f = cam.view;
+	}
 	cam_f.normalize();
 	Vec3 cam_r = cam_f.cross(cam.up);
 	cam_r.normalize();
 
 	Vec3 cam_dir(0, 0, 0);
-	if (keyStates['w']) {
+	if (key_states['w']) {
 		cam_dir += cam_f;
-	} else if (keyStates['s']) {
+	} else if (key_states['s']) {
 		cam_dir -= cam_f;
 	}
-	if (keyStates['d']) {
+	if (key_states['d']) {
 		cam_dir += cam_r;
-	} else if (keyStates['a']) {
+	} else if (key_states['a']) {
 		cam_dir -= cam_r;
 	}
 	if (cam_dir != Vec3(0, 0, 0)) {
@@ -242,8 +256,71 @@ void modelChildShip() {
 	glPopMatrix();
 }
 
-void draw_hemisphere(int slices, int stacks) {
+/* drawTexturedSphere(r, segs) - Draw a sphere centered on the local
+ origin, with radius r and approximated by segs polygon segments,
+ having texture coordinates with a latitude-longitude mapping.
+ */
+void drawTexturedSphere(float r, int segs) {
 	int i, j;
+	float x, y, z, z1, z2, R, R1, R2;
+
+	// Top cap
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0, 0, 1);
+	glTexCoord2f(0.5f, 1.0f); // This is an ugly (u,v)-mapping singularity
+	glVertex3f(0, 0, r);
+	z = cos(M_PI / segs);
+	R = sin(M_PI / segs);
+	for (i = 0; i <= 2 * segs; i++) {
+		x = R * cos(i * 2.0 * M_PI / (2 * segs));
+		y = R * sin(i * 2.0 * M_PI / (2 * segs));
+		glNormal3f(x, y, z);
+		glTexCoord2f((float) i / (2 * segs), 1.0f - 1.0f / segs);
+		glVertex3f(r * x, r * y, r * z);
+	}
+	glEnd();
+
+	// Height segments
+	for (j = 1; j < segs - 1; j++) {
+		z1 = cos(j * M_PI / segs);
+		R1 = sin(j * M_PI / segs);
+		z2 = cos((j + 1) * M_PI / segs);
+		R2 = sin((j + 1) * M_PI / segs);
+		glBegin(GL_TRIANGLE_STRIP);
+		for (i = 0; i <= 2 * segs; i++) {
+			x = R1 * cos(i * 2.0 * M_PI / (2 * segs));
+			y = R1 * sin(i * 2.0 * M_PI / (2 * segs));
+			glNormal3f(x, y, z1);
+			glTexCoord2f((float) i / (2 * segs), 1.0f - (float) j / segs);
+			glVertex3f(r * x, r * y, r * z1);
+			x = R2 * cos(i * 2.0 * M_PI / (2 * segs));
+			y = R2 * sin(i * 2.0 * M_PI / (2 * segs));
+			glNormal3f(x, y, z2);
+			glTexCoord2f((float) i / (2 * segs), 1.0f - (float) (j + 1) / segs);
+			glVertex3f(r * x, r * y, r * z2);
+		}
+		glEnd();
+	}
+
+	// Bottom cap
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0, 0, -1);
+	glTexCoord2f(0.5f, 1.0f); // This is an ugly (u,v)-mapping singularity
+	glVertex3f(0, 0, -r);
+	z = -cos(M_PI / segs);
+	R = sin(M_PI / segs);
+	for (i = 2 * segs; i >= 0; i--) {
+		x = R * cos(i * 2.0 * M_PI / (2 * segs));
+		y = R * sin(i * 2.0 * M_PI / (2 * segs));
+		glNormal3f(x, y, z);
+		glTexCoord2f(1.0f - (float) i / (2 * segs), 1.0f / segs);
+		glVertex3f(r * x, r * y, r * z);
+	}
+	glEnd();
+}
+
+void draw_hemisphere(int slices, int stacks) {
+	float i, j;
 	for (i = 0; i <= stacks; i++) {
 		// Compute 2 heights z of strip, and distances xz_r from center
 		double lat0 = M_PI * (-0.5 + (double) (i - 1) / (2 * stacks));
@@ -262,10 +339,12 @@ void draw_hemisphere(int slices, int stacks) {
 
 			// glTexCoordf()
 			glNormal3f(x * xy_r0, y * xy_r0, z0);
+			glTexCoord2f((j - 1) / slices, 1.0 - (i / stacks));
 			glVertex3f(x * xy_r0, y * xy_r0, z0);
 
 			// glTexCoordf()
 			glNormal3f(x * xy_r1, y * xy_r1, z1);
+			glTexCoord2f((j) / slices, 1.0 - (i / stacks));
 			glVertex3f(x * xy_r1, y * xy_r1, z1);
 		}
 		glEnd();
@@ -281,12 +360,17 @@ void draw_scene() {
 	draw_grid();
 	glPushMatrix();
 	glRotatef(90, 1, 0, 0);
-	//glutWireSphere(1000, 64, 64);
-	glPolygonMode(GL_FRONT, GL_LINE);
+
+	// Draw textured sky hemisphere
+	glEnable(GL_TEXTURE_2D);
+	glColor4f(1, 1, 1, 1);
+	glBindTexture(GL_TEXTURE_2D, texture_array[SKY]);
 	glScalef(1000, 1000, 1000);
-	draw_hemisphere(64, 64);
-	glPolygonMode(GL_FRONT, GL_FILL);
+	draw_hemisphere(128, 128);
+	//drawTexturedSphere(100, 64);
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
+
 }
 
 // increment frame_passed every call, update FPS value every one second
@@ -313,6 +397,12 @@ void display_callback(void) {
 
 // clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if (!special_states[GLUT_KEY_F2]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	} else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -462,10 +552,12 @@ int main(int argc, char **argv) {
 	cam_window = glutCreateWindow("Camera");
 	glutKeyboardFunc(cam_keyboard_callback);
 	glutKeyboardUpFunc(cam_keyup_callback);
+	glutSpecialFunc(special_key_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
 	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
+	JPEG_Texture(texture_array, "sky_map.jpg", SKY);
 
 	glutSetWindow(main_window);
 	init();
