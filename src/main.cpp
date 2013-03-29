@@ -61,7 +61,7 @@ int prev_x, prev_y;
 //Cool debug tool! Use command line arguments to pass in ints!
 bool is_use_in_values = false;
 double in_value[3];
-double cam_speed = 1.0;
+double cam_rot_speed = 1.0;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Initialization/Setup and Teardown ////////////////////////////
@@ -177,7 +177,7 @@ void keys_consumer() {
 		return;
 	}
 
-	double speed = shift_held ? 0.03 : 0.015;
+	double speed = shift_held ? 1.0 : 0.015;
 	// Camera view relative vectors
 	Vec3 cam_f(cam.view.x, 0, cam.view.z);
 	cam_f.normalize();
@@ -221,8 +221,8 @@ void motion_callback(int x, int y) {
 		}
 		glutWarpPointer(mid_x, mid_y);
 
-		double x_rad = cam_speed * dx / disp_width;
-		double y_rad = cam_speed * dy / disp_height;
+		double x_rad = cam_rot_speed * dx / disp_width;
+		double y_rad = cam_rot_speed * dy / disp_height;
 
 		cam.rotate_view(x_rad, y_rad);
 
@@ -254,6 +254,10 @@ void draw_scene() {
 	modelChildShip();
 	glPopMatrix();
 	draw_grid();
+	glPushMatrix();
+	glRotatef(90, 1, 0, 0);
+	glutWireSphere(1000, 64, 64);
+	glPopMatrix();
 }
 
 // display callback
