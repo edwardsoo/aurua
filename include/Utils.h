@@ -22,6 +22,19 @@ void debug_vec3(Vec3 *vec) {
 	printf("x=%f y=%f z=%f\n", vec->x, vec->y, vec->z);
 }
 
+// get system time in ms, only useful for time difference
+unsigned long get_system_time() {
+	unsigned long time = 0;
+#if _WIN32
+	time = GetTickCount();
+#elif linux
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	time = (unsigned long) (tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
+#endif
+	return time;
+}
+
 // inversion routine originally from MESA
 bool invert_pose(float *m) {
 	float inv[16], det;

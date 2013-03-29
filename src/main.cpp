@@ -42,11 +42,13 @@ using namespace std;
 bool is_quit = false;
 
 // Keys variables
-bool shift_held = false;
 bool* keyStates = new bool[256];
 
-// window handles for mother ship and scout ship
+// window handles
 int main_window, cam_window;
+unsigned long prev_time;
+int frame_passed = 0;
+char win_title[32] = { 0 };
 
 static GLuint texture;
 
@@ -150,24 +152,10 @@ void keyboard_callback(unsigned char key, int x, int y) {
 }
 
 void cam_keyboard_callback(unsigned char key, int x, int y) {
-	int modifier = glutGetModifiers();
-	if (modifier & GLUT_ACTIVE_SHIFT) {
-		printf("shift pressed\n");
-		fflush(stdout);
-		shift_held = true;
-	} else {
-		shift_held = false;
-	}
 	keyStates[key] = true;
 }
 
 void cam_keyup_callback(unsigned char key, int x, int y) {
-	int modifier = glutGetModifiers();
-	if (modifier & GLUT_ACTIVE_SHIFT) {
-		shift_held = true;
-	} else {
-		shift_held = false;
-	}
 	keyStates[key] = false;
 }
 
@@ -177,7 +165,14 @@ void keys_consumer() {
 		return;
 	}
 
-	double speed = shift_held ? 1.0 : 0.015;
+	double speed = 0.015;
+#if _WIN32
+	// return states of the left shift key
+	if (GetKeyState(VK_LSHIFT) & 0x80) {
+		speed = 1.0;
+	}
+#endif
+
 	// Camera view relative vectors
 	Vec3 cam_f(cam.view.x, 0, cam.view.z);
 	cam_f.normalize();
@@ -225,12 +220,12 @@ void motion_callback(int x, int y) {
 		double y_rad = cam_rot_speed * dy / disp_height;
 
 		cam.rotate_view(x_rad, y_rad);
-
-		if (dx != 0 || dy != 0) {
-			printf("dx=%f dy=%f ", x_rad, y_rad);
-			debug_vec3(&cam.view);
-			fflush(stdout);
-		}
+		/*
+		 if (dx != 0 || dy != 0) {
+		 printf("dx=%f dy=%f ", x_rad, y_rad);
+		 debug_vec3(&cam.view);
+		 fflush(stdout);
+		 }*/
 	}
 }
 
@@ -247,6 +242,36 @@ void modelChildShip() {
 	glPopMatrix();
 }
 
+void draw_hemisphere(int slices, int stacks) {
+	int i, j;
+	for (i = 0; i <= stacks; i++) {
+		// Compute 2 heights z of strip, and distances xz_r from center
+		double lat0 = M_PI * (-0.5 + (double) (i - 1) / (2 * stacks));
+		double z0 = sin(lat0);
+		double xy_r0 = cos(lat0);
+
+		double lat1 = M_PI * (-0.5 + (double) i / (2 * stacks));
+		double z1 = sin(lat1);
+		double xy_r1 = cos(lat1);
+
+		glBegin(GL_QUAD_STRIP);
+		for (j = 0; j <= slices; j++) {
+			double lng = 2 * M_PI * (double) (j - 1) / slices;
+			double x = cos(lng);
+			double y = sin(lng);
+
+			// glTexCoordf()
+			glNormal3f(x * xy_r0, y * xy_r0, z0);
+			glVertex3f(x * xy_r0, y * xy_r0, z0);
+
+			// glTexCoordf()
+			glNormal3f(x * xy_r1, y * xy_r1, z1);
+			glVertex3f(x * xy_r1, y * xy_r1, z1);
+		}
+		glEnd();
+	}
+}
+
 void draw_scene() {
 	glPushMatrix();
 	glColor3f(1, 1, 1);
@@ -256,8 +281,28 @@ void draw_scene() {
 	draw_grid();
 	glPushMatrix();
 	glRotatef(90, 1, 0, 0);
-	glutWireSphere(1000, 64, 64);
+	//glutWireSphere(1000, 64, 64);
+	glPolygonMode(GL_FRONT, GL_LINE);
+	glScalef(1000, 1000, 1000);
+	draw_hemisphere(64, 64);
+	glPolygonMode(GL_FRONT, GL_FILL);
 	glPopMatrix();
+}
+
+// increment frame_passed every call, update FPS value every one second
+void set_fps() {
+	unsigned long curr_time = get_system_time();
+	int current_window = glutGetWindow();
+	if (current_window == cam_window) {
+		frame_passed++;
+		if (curr_time - prev_time > 1000.0) {
+			sprintf(win_title, "%d fps", (int) frame_passed);
+			glutSetWindowTitle(win_title);
+			frame_passed = 0;
+			prev_time = curr_time;
+		}
+	}
+
 }
 
 // display callback
@@ -288,6 +333,7 @@ void display_callback(void) {
 	 */
 	glutSetWindow(current_window);
 	glutSwapBuffers();
+	set_fps();
 }
 
 void draw_title() {
