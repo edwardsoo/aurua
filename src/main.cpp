@@ -128,7 +128,9 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 		exit(0);
 	}
 	if (current_window == cam_window) {
-		if (key == 'p' || key == 'P') {
+		switch (key) {
+		case 'p':
+		case 'P':
 			paused = !paused;
 			if (paused) {
 				sprintf(win_title, "Paused");
@@ -140,13 +142,49 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 				glutIdleFunc(idle);
 				glutPassiveMotionFunc(motion_callback);
 			}
+			break;
+		case 'W':
+			key_states['w'] = true;
+			break;
+		case 'A':
+			key_states['a'] = true;
+			break;
+		case 'S':
+			key_states['s'] = true;
+			break;
+		case 'D':
+			key_states['d'] = true;
+			break;
+		default:
+			break;
 		}
+
 	}
 }
 
 void cam_keyup_callback(unsigned char key, int x, int y) {
+	int current_window = glutGetWindow();
 	key_states[key] = false;
-	fflush(stdout);
+
+	if (current_window == cam_window) {
+		switch (key) {
+		case 'W':
+			key_states['w'] = false;
+			break;
+		case 'A':
+			key_states['a'] = false;
+			break;
+		case 'S':
+			key_states['s'] = false;
+			break;
+		case 'D':
+			key_states['d'] = false;
+			break;
+		default:
+			break;
+		}
+
+	}
 }
 
 void keys_consumer() {
