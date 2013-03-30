@@ -26,6 +26,7 @@
 #include "Camera.h"
 #include "Vec3.h"
 #include "Utils.h"
+#include "Geometry.h"
 
 using namespace std;
 
@@ -319,7 +320,7 @@ void drawTexturedSphere(float r, int segs) {
 	glEnd();
 }
 
-void draw_hemisphere(int slices, int stacks) {
+void drawHemisphere(int slices, int stacks) {
 	float i, j;
 	for (i = 0; i <= stacks; i++) {
 		// Compute 2 heights z of strip, and distances xz_r from center
@@ -359,16 +360,14 @@ void draw_scene() {
 	glPopMatrix();
 	draw_grid();
 	glPushMatrix();
-	glRotatef(90, 1, 0, 0);
 
 	// Draw textured sky hemisphere
-	glEnable(GL_TEXTURE_2D);
-	glColor4f(1, 1, 1, 1);
-	glBindTexture(GL_TEXTURE_2D, texture_array[SKY]);
-	glScalef(1000, 1000, 1000);
-	draw_hemisphere(128, 128);
+	//glEnable(GL_TEXTURE_2D);
+	//glBindTexture(GL_TEXTURE_2D, texture_array[SKY]);
+	//glScalef(1, 1, 1);
+	draw_hemisphere(10, 10);
 	//drawTexturedSphere(100, 64);
-	glDisable(GL_TEXTURE_2D);
+	//glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
 }
