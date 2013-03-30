@@ -10,8 +10,25 @@ Vec3 normalize(Vec3 a, Vec3 b, double length) {
 	return c;
 }
 
-void draw_crosshair() {
-
+void draw_crosshair(int screen_width, int screen_height) {
+	float h_w_ratio = float(screen_height) / screen_width;
+	glColor4f(0.2, 0.5, 0, 0.5);
+	glBegin (GL_LINES);
+	glVertex3f(0, -0.05, 0);
+	glVertex3f(0, -0.01, 0);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0, 0.01, 0);
+	glVertex3f(0, 0.05, 0);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(-0.05 * h_w_ratio, 0, 0);
+	glVertex3f(-0.01 * h_w_ratio, 0, 0);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0.01 * h_w_ratio, 0, 0);
+	glVertex3f(0.05 * h_w_ratio, 0, 0);
+	glEnd();
 }
 
 void draw_quarter_hemisphere(float radius, int stacks) {
@@ -92,7 +109,6 @@ void draw_quarter1(float radius, int stacks, float tri_h, float tri_w,
 	b = Vec3(s1_x0 + i * tri_w, s1_y, s1_z);
 	draw_hemisphere_point(b, radius, 1, s1_v);
 }
-
 
 void draw_hemisphere(float radius, int stacks) {
 	float tri_h = radius / stacks;

@@ -271,13 +271,21 @@ void set_fps() {
 
 }
 
-// display callback
-void display_callback(void) {
-	int current_window = glutGetWindow();
-	keys_consumer();
+void draw_HUD() {
 
-// clear the color and depth buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Draw HUDs
+	glDisable(GL_DEPTH_TEST);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 10.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	draw_crosshair(glutGet(GLUT_WINDOW_WIDTH ), glutGet(GLUT_WINDOW_HEIGHT ));
+}
+
+void draw_3D() {
+	glEnable(GL_DEPTH_TEST);
 
 	if (!special_states[GLUT_KEY_F2]) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -296,12 +304,26 @@ void display_callback(void) {
 	Vec3 center = cam.pos + cam.view;
 	gluLookAt(cam.pos.x, cam.pos.y, cam.pos.z, center.x, center.y, center.z,
 			cam.up.x, cam.up.y, cam.up.z);
-	draw_scene();
 
 	/*
-	 glGetDoublev(GL_MODELVIEW_MATRIX, tmp);
-	 printMatrix(tmp);
-	 */
+	 float tmp[16];glPushMatrix();
+	 glGetFloatv(GL_MODELVIEW_MATRIX, tmp);
+	 invert_pose(tmp);
+	 glMultMatrixf(tmp);
+	 glPopMatrix();*/
+
+	draw_scene();
+
+}
+
+// display callback
+void display_callback(void) {
+	int current_window = glutGetWindow();
+	keys_consumer();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	draw_3D();
+	draw_HUD();
+
 	glutSetWindow(current_window);
 	glutSwapBuffers();
 	set_fps();
