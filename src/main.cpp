@@ -217,33 +217,28 @@ void modelChildShip() {
 
 void draw_sky() {
 	// Draw textured sky hemisphere
-	glEnable(GL_TEXTURE_2D);
-	glScalef(1000, 1000, 1000);
-	glColor3f(1.0, 1.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, textures[SKY_Q1]);
-	draw_quarter_hemisphere(1, 64);
-	glRotatef(90, 0, 1, 0);
-	glBindTexture(GL_TEXTURE_2D, textures[SKY_Q2]);
-	draw_quarter_hemisphere(1, 64);
-	glRotatef(90, 0, 1, 0);
-	glBindTexture(GL_TEXTURE_2D, textures[SKY_Q3]);
-	draw_quarter_hemisphere(1, 64);
-	glRotatef(90, 0, 1, 0);
-	glBindTexture(GL_TEXTURE_2D, textures[SKY_Q4]);
-	draw_quarter_hemisphere(1, 64);
-
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(0, 0, -3);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(0, 10, -3);
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(10, 10, -3);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(10, 0, -3);
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
+	if (!sky_init) {
+		glNewList(SKY_LIST, GL_COMPILE_AND_EXECUTE);
+		glEnable(GL_TEXTURE_2D);
+		glScalef(1000, 1000, 1000);
+		glColor3f(1.0, 1.0, 1.0);
+		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q1]);
+		draw_quarter_hemisphere(1, 64);
+		glRotatef(90, 0, 1, 0);
+		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q2]);
+		draw_quarter_hemisphere(1, 64);
+		glRotatef(90, 0, 1, 0);
+		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q3]);
+		draw_quarter_hemisphere(1, 64);
+		glRotatef(90, 0, 1, 0);
+		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q4]);
+		draw_quarter_hemisphere(1, 64);
+		glDisable(GL_TEXTURE_2D);
+		glEndList();
+		sky_init = true;
+	} else {
+		glCallList(SKY_LIST);
+	}
 
 }
 
