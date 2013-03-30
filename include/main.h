@@ -1,12 +1,18 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+// Texture ID
 #define TITLE 0
 #define SKY_Q1 TITLE+1
 #define SKY_Q2 SKY_Q1+1
 #define SKY_Q3 SKY_Q2+1
 #define SKY_Q4 SKY_Q3+1
 #define NUM_TEXTURES SKY_Q4+1
+
+// Display list ID
+#define SKY_LIST 1
+
+bool sky_init = false;
 
 // flag to indicate that we should clean up and exit
 bool is_quit = false;

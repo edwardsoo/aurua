@@ -10,6 +10,10 @@ Vec3 normalize(Vec3 a, Vec3 b, double length) {
 	return c;
 }
 
+void draw_crosshair() {
+
+}
+
 void draw_quarter_hemisphere(float radius, int stacks) {
 	float tri_h = radius / stacks;
 	float tri_d = radius / (sqrt(2) * stacks);
