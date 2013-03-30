@@ -232,17 +232,6 @@ void draw_sky() {
 	glBindTexture(GL_TEXTURE_2D, textures[SKY_Q4]);
 	draw_quarter_hemisphere(1, 64);
 
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(0, 0, -3);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(0, 10, -3);
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(10, 10, -3);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(10, 0, -3);
-	glEnd();
-
 	glDisable(GL_TEXTURE_2D);
 
 }
