@@ -121,7 +121,27 @@ void special_key_callback(int key, int x, int y) {
 }
 
 void cam_keyboard_callback(unsigned char key, int x, int y) {
+	int current_window = glutGetWindow();
 	key_states[key] = true;
+	if (key == 27) {
+		cleanup();
+		exit(0);
+	}
+	if (current_window == cam_window) {
+		if (key == 'p' || key == 'P') {
+			paused = !paused;
+			if (paused) {
+				sprintf(win_title, "Paused");
+				glutSetWindowTitle(win_title);
+				glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+				glutPassiveMotionFunc(NULL);
+				glutIdleFunc(NULL);
+			} else {
+				glutIdleFunc(idle);
+				glutPassiveMotionFunc(motion_callback);
+			}
+		}
+	}
 }
 
 void cam_keyup_callback(unsigned char key, int x, int y) {
@@ -130,51 +150,51 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 }
 
 void keys_consumer() {
-	if (key_states[27]) {
-		is_quit = true;
-		return;
-	}
+	int current_window = glutGetWindow();
 
-	double speed = 0.015;
+	if (current_window == cam_window) {
+		double speed = 0.015;
 #if _WIN32
-	// return states of the left shift key
-	if (GetKeyState(VK_LSHIFT) & 0x80) {
-		speed = 1.0;
-	}
+		// return states of the left shift key
+		if (GetKeyState(VK_LSHIFT) & 0x80) {
+			speed = 1.0;
+		}
 #endif
 
-	// Camera view relative vectors
-	Vec3 cam_f;
-	if (!special_states[GLUT_KEY_F1]) {
-		cam_f = Vec3(cam.view.x, 0, cam.view.z);
-	} else {
-		cam_f = cam.view;
-	}
-	cam_f.normalize();
-	Vec3 cam_r = cam_f.cross(cam.up);
-	cam_r.normalize();
+		// Camera view relative vectors
+		Vec3 cam_f;
+		if (!special_states[GLUT_KEY_F1]) {
+			cam_f = Vec3(cam.view.x, 0, cam.view.z);
+		} else {
+			cam_f = cam.view;
+		}
+		cam_f.normalize();
+		Vec3 cam_r = cam_f.cross(cam.up);
+		cam_r.normalize();
 
-	Vec3 cam_dir(0, 0, 0);
-	if (key_states['w']) {
-		cam_dir += cam_f;
-	} else if (key_states['s']) {
-		cam_dir -= cam_f;
-	}
-	if (key_states['d']) {
-		cam_dir += cam_r;
-	} else if (key_states['a']) {
-		cam_dir -= cam_r;
-	}
-	if (cam_dir != Vec3(0, 0, 0)) {
-		// debug_vec3(&cam_dir);
-		cam_dir.normalize();
-	}
+		Vec3 cam_dir(0, 0, 0);
+		if (key_states['w']) {
+			cam_dir += cam_f;
+		} else if (key_states['s']) {
+			cam_dir -= cam_f;
+		}
+		if (key_states['d']) {
+			cam_dir += cam_r;
+		} else if (key_states['a']) {
+			cam_dir -= cam_r;
+		}
+		if (cam_dir != Vec3(0, 0, 0)) {
+			// debug_vec3(&cam_dir);
+			cam_dir.normalize();
+		}
 
-	cam.pos += cam_dir * speed;
+		cam.pos += cam_dir * speed;
+	}
 }
 
 // motion callback
 void motion_callback(int x, int y) {
+	glutSetCursor(GLUT_CURSOR_NONE);
 	int current_window = glutGetWindow();
 	double dx, dy;
 
@@ -274,7 +294,6 @@ void set_fps() {
 }
 
 void draw_HUD() {
-
 	// Draw HUDs
 	glDisable(GL_DEPTH_TEST);
 
@@ -399,18 +418,17 @@ void render() {
 
 void idle() {
 	if (is_quit) {
-// cleanup any allocated memory
 		cleanup();
-// perform hard exit of the program, since glutMainLoop()
-// will never return
 		exit(0);
 	}
 
 	//glutSetWindow(main_window);
 	//glutPostRedisplay();
 
-	glutSetWindow(cam_window);
-	glutPostRedisplay();
+	if (!paused) {
+		glutSetWindow(cam_window);
+		glutPostRedisplay();
+	}
 
 }
 
@@ -458,13 +476,13 @@ int main(int argc, char **argv) {
 
 // initialize the mothership window
 	/*glutInitWindowSize(disp_width, disp_height);
-	glutInitWindowPosition(0, 100);
-	main_window = glutCreateWindow("AURUA");
-	glutKeyboardFunc(keyboard_callback);
-	glutDisplayFunc(render);
-	glutReshapeFunc(resize_callback);
-	glutSetWindow(main_window);
-	init();*/
+	 glutInitWindowPosition(0, 100);
+	 main_window = glutCreateWindow("AURUA");
+	 glutKeyboardFunc(keyboard_callback);
+	 glutDisplayFunc(render);
+	 glutReshapeFunc(resize_callback);
+	 glutSetWindow(main_window);
+	 init();*/
 
 // initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
@@ -478,7 +496,6 @@ int main(int argc, char **argv) {
 	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
 	glutSetWindow(cam_window);
-	glutSetCursor(GLUT_CURSOR_NONE);
 	init();
 
 	// load image and create textures

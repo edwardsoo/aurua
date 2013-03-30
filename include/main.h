@@ -16,6 +16,7 @@ bool sky_init = false;
 
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
+bool paused = false;
 
 // Keys variables
 bool key_states[256];
@@ -40,5 +41,8 @@ int prev_x, prev_y;
 bool is_use_in_values = false;
 double in_value[3];
 double cam_rot_speed = 1.0;
+
+void idle();
+void motion_callback(int x, int y);
 
 #endif
