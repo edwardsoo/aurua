@@ -18,6 +18,5 @@ public:
 	Vec3 pos;
 	Vec3 view;
 	Vec3 up;
-	Vec3 vel;
 };
 #endif /* CAMERA_H_ */

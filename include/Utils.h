@@ -14,7 +14,6 @@ void debug_camera(Camera* cam) {
 	printf("pos %f %f %f\n", cam->pos.x, cam->pos.y, cam->pos.z);
 	printf("view %f %f %f\n", cam->view.x, cam->view.y, cam->view.z);
 	printf("up %f %f %f\n", cam->up.x, cam->up.y, cam->up.z);
-	printf("vel %f %f %f\n", cam->vel.x, cam->vel.y, cam->vel.z);
 }
 
 // debug Vec3

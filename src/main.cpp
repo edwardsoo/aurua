@@ -137,9 +137,8 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 				glutSetWindowTitle(win_title);
 				glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 				glutPassiveMotionFunc(NULL);
-				glutIdleFunc(NULL);
 			} else {
-				glutIdleFunc(idle);
+				glutTimerFunc(TIMER_MS, idle, 0);
 				glutPassiveMotionFunc(motion_callback);
 			}
 			break;
@@ -191,7 +190,7 @@ void keys_consumer() {
 	int current_window = glutGetWindow();
 
 	if (current_window == cam_window) {
-		double speed = 0.015;
+		double speed = 0.5;
 #if _WIN32
 		// return states of the left shift key
 		if (GetKeyState(VK_LSHIFT) & 0x80) {
@@ -227,6 +226,14 @@ void keys_consumer() {
 		}
 
 		cam.pos += cam_dir * speed;
+	}
+}
+
+void mouse_callback(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		printf("left mouse down\n");
+		fflush(stdout);
+
 	}
 }
 
@@ -454,7 +461,7 @@ void render() {
 	glutSwapBuffers();
 }
 
-void idle() {
+void idle(int value) {
 	if (is_quit) {
 		cleanup();
 		exit(0);
@@ -466,6 +473,7 @@ void idle() {
 	if (!paused) {
 		glutSetWindow(cam_window);
 		glutPostRedisplay();
+		glutTimerFunc(TIMER_MS, idle, 0);
 	}
 
 }
@@ -531,6 +539,7 @@ int main(int argc, char **argv) {
 	glutSpecialFunc(special_key_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
+	glutMouseFunc(mouse_callback);
 	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
 	glutSetWindow(cam_window);
@@ -539,7 +548,8 @@ int main(int argc, char **argv) {
 	// load image and create textures
 	create_textures();
 
-	glutIdleFunc(idle);
+	glutTimerFunc(TIMER_MS, idle, 0);
+	//glutIdleFunc(idle);
 
 // start the main loop
 	glutMainLoop();

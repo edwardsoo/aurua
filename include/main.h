@@ -14,6 +14,9 @@
 
 bool sky_init = false;
 
+//The number of milliseconds to which the timer is set
+const int TIMER_MS = 16;
+
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
 bool paused = false;
@@ -42,7 +45,7 @@ bool is_use_in_values = false;
 double in_value[3];
 double cam_rot_speed = 1.0;
 
-void idle();
+void idle(int);
 void motion_callback(int x, int y);
 
 #endif
