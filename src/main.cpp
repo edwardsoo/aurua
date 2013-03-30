@@ -30,6 +30,8 @@
 using namespace std;
 
 Camera cam;
+
+int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Initialization/Setup and Teardown ////////////////////////////
@@ -223,16 +225,16 @@ void draw_sky() {
 		glScalef(1000, 1000, 1000);
 		glColor3f(1.0, 1.0, 1.0);
 		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q1]);
-		draw_quarter_hemisphere(1, 64);
+		draw_quarter_hemisphere(1, sky_stacks);
 		glRotatef(90, 0, 1, 0);
 		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q2]);
-		draw_quarter_hemisphere(1, 64);
+		draw_quarter_hemisphere(1, sky_stacks);
 		glRotatef(90, 0, 1, 0);
 		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q3]);
-		draw_quarter_hemisphere(1, 64);
+		draw_quarter_hemisphere(1, sky_stacks);
 		glRotatef(90, 0, 1, 0);
 		glBindTexture(GL_TEXTURE_2D, textures[SKY_Q4]);
-		draw_quarter_hemisphere(1, 64);
+		draw_quarter_hemisphere(1, sky_stacks);
 		glDisable(GL_TEXTURE_2D);
 		glEndList();
 		sky_init = true;
@@ -382,8 +384,8 @@ void idle() {
 		exit(0);
 	}
 
-	glutSetWindow(main_window);
-	glutPostRedisplay();
+	//glutSetWindow(main_window);
+	//glutPostRedisplay();
 
 	glutSetWindow(cam_window);
 	glutPostRedisplay();
@@ -433,14 +435,14 @@ int main(int argc, char **argv) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
 // initialize the mothership window
-	glutInitWindowSize(disp_width, disp_height);
+	/*glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(0, 100);
 	main_window = glutCreateWindow("AURUA");
 	glutKeyboardFunc(keyboard_callback);
 	glutDisplayFunc(render);
 	glutReshapeFunc(resize_callback);
 	glutSetWindow(main_window);
-	init();
+	init();*/
 
 // initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
