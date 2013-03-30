@@ -19,3 +19,5 @@ extern void updateDay(int planet) ;
 extern void toggleTime();
 
 extern GLuint raw_texture_load(const char *filename, int width, int height);
+
+#define SKY 0

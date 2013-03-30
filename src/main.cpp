@@ -19,12 +19,14 @@
 #include<stdio.h>
 #include<math.h>
 
+#include "JPEG.h"
 #include "ViewingMode.h"
 #include "Ship.h"
 #include "Global.h"
 #include "Camera.h"
 #include "Vec3.h"
 #include "Utils.h"
+#include "Geometry.h"
 
 using namespace std;
 
@@ -41,10 +43,19 @@ using namespace std;
 // flag to indicate that we should clean up and exit
 bool is_quit = false;
 
-// window handles for mother ship and scout ship
+// Keys variables
+bool key_states[256];
+
+bool special_states[256];
+
+// window handles
 int main_window, cam_window;
+unsigned long prev_time;
+int frame_passed = 0;
+char win_title[32] = { 0 };
 
 static GLuint texture;
+unsigned int texture_array[3];
 
 // display width and height
 int disp_width = 800, disp_height = 640;
@@ -57,7 +68,7 @@ int prev_x, prev_y;
 //Cool debug tool! Use command line arguments to pass in ints!
 bool is_use_in_values = false;
 double in_value[3];
-double cam_speed = 1.0;
+double cam_rot_speed = 1.0;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Initialization/Setup and Teardown ////////////////////////////
@@ -145,6 +156,63 @@ void keyboard_callback(unsigned char key, int x, int y) {
 	}
 }
 
+void special_key_callback(int key, int x, int y) {
+	special_states[key] = !special_states[key];
+}
+
+void cam_keyboard_callback(unsigned char key, int x, int y) {
+	key_states[key] = true;
+}
+
+void cam_keyup_callback(unsigned char key, int x, int y) {
+	key_states[key] = false;
+	fflush(stdout);
+}
+
+void keys_consumer() {
+	if (key_states[27]) {
+		is_quit = true;
+		return;
+	}
+
+	double speed = 0.015;
+#if _WIN32
+	// return states of the left shift key
+	if (GetKeyState(VK_LSHIFT) & 0x80) {
+		speed = 1.0;
+	}
+#endif
+
+	// Camera view relative vectors
+	Vec3 cam_f;
+	if (!special_states[GLUT_KEY_F1]) {
+		cam_f = Vec3(cam.view.x, 0, cam.view.z);
+	} else {
+		cam_f = cam.view;
+	}
+	cam_f.normalize();
+	Vec3 cam_r = cam_f.cross(cam.up);
+	cam_r.normalize();
+
+	Vec3 cam_dir(0, 0, 0);
+	if (key_states['w']) {
+		cam_dir += cam_f;
+	} else if (key_states['s']) {
+		cam_dir -= cam_f;
+	}
+	if (key_states['d']) {
+		cam_dir += cam_r;
+	} else if (key_states['a']) {
+		cam_dir -= cam_r;
+	}
+	if (cam_dir != Vec3(0, 0, 0)) {
+		// debug_vec3(&cam_dir);
+		cam_dir.normalize();
+	}
+
+	cam.pos += cam_dir * speed;
+}
+
 // motion callback
 void motion_callback(int x, int y) {
 	int current_window = glutGetWindow();
@@ -157,20 +225,22 @@ void motion_callback(int x, int y) {
 		dx = x - mid_x;
 		dy = y - mid_y;
 
-		// glutWrapPointer has a bug where it may call the MotionCallback again
+// glutWrapPointer has a bug where it may call the MotionCallback again
 		if (dx == 0 && dy == 0) {
 			return;
 		}
 		glutWarpPointer(mid_x, mid_y);
 
-		double x_rad = cam_speed * dx / disp_width;
-		double y_rad = cam_speed * dy / disp_height;
+		double x_rad = cam_rot_speed * dx / disp_width;
+		double y_rad = cam_rot_speed * dy / disp_height;
 
-		Vec3 view_xz = Vec3(cam.view.z, 0, cam.view.z);
-		cam.view.z = (sin(x_rad) * cam.view.x + cos(x_rad) * cam.view.z);
-		cam.view.x = (cos(x_rad) * cam.view.x - sin(x_rad) * cam.view.z);
-		cam.view.y = (cos(y_rad) * cam.view.y - sin(y_rad) * view_xz.length());
-		cam.view.normalize();
+		cam.rotate_view(x_rad, y_rad);
+		/*
+		 if (dx != 0 || dy != 0) {
+		 printf("dx=%f dy=%f ", x_rad, y_rad);
+		 debug_vec3(&cam.view);
+		 fflush(stdout);
+		 }*/
 	}
 }
 
@@ -187,6 +257,101 @@ void modelChildShip() {
 	glPopMatrix();
 }
 
+/* drawTexturedSphere(r, segs) - Draw a sphere centered on the local
+ origin, with radius r and approximated by segs polygon segments,
+ having texture coordinates with a latitude-longitude mapping.
+ */
+void drawTexturedSphere(float r, int segs) {
+	int i, j;
+	float x, y, z, z1, z2, R, R1, R2;
+
+	// Top cap
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0, 0, 1);
+	glTexCoord2f(0.5f, 1.0f); // This is an ugly (u,v)-mapping singularity
+	glVertex3f(0, 0, r);
+	z = cos(M_PI / segs);
+	R = sin(M_PI / segs);
+	for (i = 0; i <= 2 * segs; i++) {
+		x = R * cos(i * 2.0 * M_PI / (2 * segs));
+		y = R * sin(i * 2.0 * M_PI / (2 * segs));
+		glNormal3f(x, y, z);
+		glTexCoord2f((float) i / (2 * segs), 1.0f - 1.0f / segs);
+		glVertex3f(r * x, r * y, r * z);
+	}
+	glEnd();
+
+	// Height segments
+	for (j = 1; j < segs - 1; j++) {
+		z1 = cos(j * M_PI / segs);
+		R1 = sin(j * M_PI / segs);
+		z2 = cos((j + 1) * M_PI / segs);
+		R2 = sin((j + 1) * M_PI / segs);
+		glBegin(GL_TRIANGLE_STRIP);
+		for (i = 0; i <= 2 * segs; i++) {
+			x = R1 * cos(i * 2.0 * M_PI / (2 * segs));
+			y = R1 * sin(i * 2.0 * M_PI / (2 * segs));
+			glNormal3f(x, y, z1);
+			glTexCoord2f((float) i / (2 * segs), 1.0f - (float) j / segs);
+			glVertex3f(r * x, r * y, r * z1);
+			x = R2 * cos(i * 2.0 * M_PI / (2 * segs));
+			y = R2 * sin(i * 2.0 * M_PI / (2 * segs));
+			glNormal3f(x, y, z2);
+			glTexCoord2f((float) i / (2 * segs), 1.0f - (float) (j + 1) / segs);
+			glVertex3f(r * x, r * y, r * z2);
+		}
+		glEnd();
+	}
+
+	// Bottom cap
+	glBegin(GL_TRIANGLE_FAN);
+	glNormal3f(0, 0, -1);
+	glTexCoord2f(0.5f, 1.0f); // This is an ugly (u,v)-mapping singularity
+	glVertex3f(0, 0, -r);
+	z = -cos(M_PI / segs);
+	R = sin(M_PI / segs);
+	for (i = 2 * segs; i >= 0; i--) {
+		x = R * cos(i * 2.0 * M_PI / (2 * segs));
+		y = R * sin(i * 2.0 * M_PI / (2 * segs));
+		glNormal3f(x, y, z);
+		glTexCoord2f(1.0f - (float) i / (2 * segs), 1.0f / segs);
+		glVertex3f(r * x, r * y, r * z);
+	}
+	glEnd();
+}
+
+void drawHemisphere(int slices, int stacks) {
+	float i, j;
+	for (i = 0; i <= stacks; i++) {
+		// Compute 2 heights z of strip, and distances xz_r from center
+		double lat0 = M_PI * (-0.5 + (double) (i - 1) / (2 * stacks));
+		double z0 = sin(lat0);
+		double xy_r0 = cos(lat0);
+
+		double lat1 = M_PI * (-0.5 + (double) i / (2 * stacks));
+		double z1 = sin(lat1);
+		double xy_r1 = cos(lat1);
+
+		glBegin(GL_QUAD_STRIP);
+		for (j = 0; j <= slices; j++) {
+			double lng = 2 * M_PI * (double) (j - 1) / slices;
+			double x = cos(lng);
+			double y = sin(lng);
+
+			// glTexCoordf()
+			glNormal3f(x * xy_r0, y * xy_r0, z0);
+			glTexCoord2f((j - 1) / slices, 1.0 - (i / stacks));
+			glVertex3f(x * xy_r0, y * xy_r0, z0);
+
+			// glTexCoordf()
+			glNormal3f(x * xy_r1, y * xy_r1, z1);
+			glTexCoord2f((j) / slices, 1.0 - (i / stacks));
+			glVertex3f(x * xy_r1, y * xy_r1, z1);
+		}
+		glEnd();
+	}
+}
+
 void draw_scene() {
 	glPushMatrix();
 	glColor3f(1, 1, 1);
@@ -194,15 +359,49 @@ void draw_scene() {
 	modelChildShip();
 	glPopMatrix();
 	draw_grid();
+	glPushMatrix();
+
+	// Draw textured sky hemisphere
+	//glEnable(GL_TEXTURE_2D);
+	//glBindTexture(GL_TEXTURE_2D, texture_array[SKY]);
+	//glScalef(1, 1, 1);
+	draw_hemisphere(10, 10);
+	//drawTexturedSphere(100, 64);
+	//glDisable(GL_TEXTURE_2D);
+	glPopMatrix();
+
+}
+
+// increment frame_passed every call, update FPS value every one second
+void set_fps() {
+	unsigned long curr_time = get_system_time();
+	int current_window = glutGetWindow();
+	if (current_window == cam_window) {
+		frame_passed++;
+		if (curr_time - prev_time > 1000.0) {
+			sprintf(win_title, "%d fps", (int) frame_passed);
+			glutSetWindowTitle(win_title);
+			frame_passed = 0;
+			prev_time = curr_time;
+		}
+	}
+
 }
 
 // display callback
 void display_callback(void) {
 	double tmp[16];
 	int current_window = glutGetWindow();
+	keys_consumer();
 
-	// clear the color and depth buffers
+// clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if (!special_states[GLUT_KEY_F2]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	} else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -223,6 +422,7 @@ void display_callback(void) {
 	 */
 	glutSetWindow(current_window);
 	glutSwapBuffers();
+	set_fps();
 }
 
 void draw_title() {
@@ -292,10 +492,10 @@ void render() {
 
 void idle() {
 	if (is_quit) {
-		// cleanup any allocated memory
+// cleanup any allocated memory
 		cleanup();
-		// perform hard exit of the program, since glutMainLoop()
-		// will never return
+// perform hard exit of the program, since glutMainLoop()
+// will never return
 		exit(0);
 	}
 
@@ -331,13 +531,13 @@ int main(int argc, char **argv) {
 	cam.view = Vec3(0, 0, 1);
 	cam.up = Vec3(0, 1, 0);
 
-	// initialize glut
+// initialize glut
 	glutInit(&argc, argv);
 
-	// use double-buffered RGB+Alpha framebuffers with a depth buffer.
+// use double-buffered RGB+Alpha framebuffers with a depth buffer.
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
-	// initialize the mothership window
+// initialize the mothership window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(0, 100);
 	main_window = glutCreateWindow("AURUA");
@@ -345,26 +545,30 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(render);
 	glutReshapeFunc(resize_callback);
 
-	// initialize the camera window
+// initialize the camera window
 	glutInitWindowSize(disp_width, disp_height);
 	glutInitWindowPosition(disp_width + 50, 100);
 	cam_window = glutCreateWindow("Camera");
-	glutKeyboardFunc(keyboard_callback);
+	glutKeyboardFunc(cam_keyboard_callback);
+	glutKeyboardUpFunc(cam_keyup_callback);
+	glutSpecialFunc(special_key_callback);
 	glutDisplayFunc(display_callback);
 	glutReshapeFunc(resize_callback);
 	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
+	JPEG_Texture(texture_array, "sky_map.jpg", SKY);
 
 	glutSetWindow(main_window);
 	init();
 	glutSetWindow(cam_window);
+	glutSetCursor(GLUT_CURSOR_NONE);
 	init();
 
 	texture = raw_texture_load("aurua.raw", 1772, 1772);
 
 	glutIdleFunc(idle);
 
-	// start the main loop
+// start the main loop
 	glutMainLoop();
 
 	return 0;

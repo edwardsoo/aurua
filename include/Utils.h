@@ -9,6 +9,32 @@ void printMatrix(double* m) {
 
 }
 
+// debug camera
+void debug_camera(Camera* cam) {
+	printf("pos %f %f %f\n", cam->pos.x, cam->pos.y, cam->pos.z);
+	printf("view %f %f %f\n", cam->view.x, cam->view.y, cam->view.z);
+	printf("up %f %f %f\n", cam->up.x, cam->up.y, cam->up.z);
+	printf("vel %f %f %f\n", cam->vel.x, cam->vel.y, cam->vel.z);
+}
+
+// debug Vec3
+void debug_vec3(Vec3 *vec) {
+	printf("x=%f y=%f z=%f\n", vec->x, vec->y, vec->z);
+}
+
+// get system time in ms, only useful for time difference
+unsigned long get_system_time() {
+	unsigned long time = 0;
+#if _WIN32
+	time = GetTickCount();
+#elif linux
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	time = (unsigned long) (tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
+#endif
+	return time;
+}
+
 // inversion routine originally from MESA
 bool invert_pose(float *m) {
 	float inv[16], det;
@@ -80,7 +106,7 @@ void draw_grid() {
 	float unit = 5;
 	for (float i = -limit; i <= limit; i += unit) {
 		glBegin (GL_LINES);
-		glColor4f(0.5, 0.5, 0.5, 0.5);
+		glColor4f(1, 1, 1, 0.5);
 		glVertex3f(-limit, 0, i);
 		glVertex3f(limit, 0, i);
 		glVertex3f(i, 0, -limit);
