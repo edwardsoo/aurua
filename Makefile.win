@@ -7,11 +7,11 @@ SDIR =./src
 
 LIBS=-lopengl32 -lGLU32 -lglut32
 
-_DEPS = Camera.h Global.h Header.h Ship.h ViewingMode.h Vec3.h
+_DEPS = Camera.h Global.h Header.h ViewingMode.h Vec3.h Geometry.h Utils.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 
-_OBJ = Camera.o main.o Ship.o Global.o
+_OBJ = Camera.o main.o Global.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
