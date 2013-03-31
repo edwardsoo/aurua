@@ -12,7 +12,7 @@
 
 class Bolt: public Object {
 public:
-	Bolt(Vec3 _pos, Vec3 _vel, float _radius);
+	Bolt(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius);
 	virtual ~Bolt();
 };
 

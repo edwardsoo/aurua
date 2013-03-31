@@ -338,16 +338,68 @@ void set_fps() {
 
 }
 
-void draw_HUD() {
-	// Draw HUDs
-	glDisable(GL_DEPTH_TEST);
+// s is a 0-terminated string
+void print_bitmap_string(void* font, char* s) {
+	if (s && strlen(s)) {
+		while (*s) {
+			glutBitmapCharacter(font, *s);
+			s++;
+		}
+	}
+}
+void print_stroke_string(void* font, char* s) {
+	if (s && strlen(s)) {
+		while (*s) {
+			glutStrokeCharacter(font, *s);
+			s++;
+		}
+	}
+}
+
+
+// TODO SHIT DOESN'T WORK
+void print_life() {
+	int width = glutGet(GLUT_WINDOW_WIDTH );
+	int height = glutGet(GLUT_WINDOW_HEIGHT );
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 10.0);
+	gluOrtho2D(0, width, 0, height);
+	glScalef(1, 1, 1);
+	glTranslatef(0, 0, 1);
+	glMatrixMode(GL_MODELVIEW);
+
+	char string[4];
+	snprintf(string, 4, "%d", 100);
+	glColor3f(1, 1, 1);
+	glDisable(GL_TEXTURE_2D);
+	double tmp[4];
+	GLboolean valid;
+	glGetDoublev(GL_CURRENT_RASTER_POSITION, tmp);
+	glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
+	print_vector(tmp);
+	printf("%s\n", valid ? "valid" : "INVALID");
+	glRasterPos2f(200,0);
+	print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_24, string);
+	//print_stroke_string(GLUT_STROKE_ROMAN, string);
+}
+
+// Draw cross hair, print life and stamina amount
+void draw_HUD() {
+	int width = glutGet(GLUT_WINDOW_WIDTH );
+	int height = glutGet(GLUT_WINDOW_HEIGHT );
+	float h_w_ratio = float(height) / width;
+
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -10.0, 10.0);
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	draw_crosshair(glutGet(GLUT_WINDOW_WIDTH ), glutGet(GLUT_WINDOW_HEIGHT ));
+
+	draw_crosshair(h_w_ratio);
+	print_life();
 }
 
 void draw_3D() {

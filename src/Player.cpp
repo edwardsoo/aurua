@@ -7,13 +7,18 @@
 
 #include "Player.h"
 
-Player::Player(Vec3 _pos, Vec3 _vel, float _radius, float _mass) :
-		Object(_pos, _vel, _radius, _mass) {
-	// TODO Auto-generated constructor stub
+Player::Player(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass) :
+		Object(_pos, _vel, _acc, _radius, _mass) {
+	life = 100;
+	stamina = 100;
 
 }
 
 Player::~Player() {
 	// TODO Auto-generated destructor stub
+}
+
+void Player::regenerate() {
+
 }
 
