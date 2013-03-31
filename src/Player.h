@@ -12,7 +12,7 @@
 
 class Player: public Object {
 public:
-	Player(Vec3 _pos, Vec3 _vel, float _radius);
+	Player(Vec3 _pos, Vec3 _vel, float _radius, float _mass);
 	virtual ~Player();
 
 };

@@ -8,7 +8,7 @@
 #include "Bolt.h"
 
 Bolt::Bolt(Vec3 _pos, Vec3 _vel, float _radius) :
-		Object(_pos, _vel, _radius) {
+		Object(_pos, _vel, _radius, 0) {
 	// TODO Auto-generated constructor stub
 
 }

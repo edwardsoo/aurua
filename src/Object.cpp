@@ -7,11 +7,18 @@
 
 #include "Object.h"
 
-Object::Object(Vec3 _pos, Vec3 _vel, float _radius) {
+Object::Object() {
+	pos = Vec3();
+	vel = Vec3();
+	radius = 0;
+	mass = 0;
+}
+
+Object::Object(Vec3 _pos, Vec3 _vel, float _radius, float _mass) {
 	pos = _pos;
 	vel = _vel;
 	radius = _radius;
-
+	mass = _mass;
 }
 
 Object::~Object() {

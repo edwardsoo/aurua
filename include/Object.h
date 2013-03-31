@@ -11,12 +11,19 @@
 
 class Object {
 public:
-	Object(Vec3 _pos, Vec3 _vel, float _radius);
+	Object();
+	Object(Vec3, Vec3, float, float);
 	virtual ~Object();
 	bool collide(Object*);
 	Vec3 pos;
 	Vec3 vel;
 	float radius;
+	float mass;
+};
+
+struct ObjectPair {
+	Object *obj_1;
+	Object *obj_2;
 };
 
 #endif /* OBJECT_H_ */

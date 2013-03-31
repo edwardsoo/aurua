@@ -18,10 +18,6 @@
 using std::vector;
 using std::set;
 
-struct ObjectPair {
-	Object *obj_1;
-	Object *obj_2;
-};
 
 class Octree {
 

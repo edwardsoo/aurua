@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Object.h"
+#include "Octree.h"
 using std::vector;
 
 class PhysicsEngine {
@@ -20,6 +21,10 @@ public:
 	void advance_state(float t);
 private:
 	vector<Object*> objects;
+	Octree* octree;
+	void update_objects_position(float t);
+	void handle_collisions();
+	void reflect_objects(Object*, Object*);
 };
 
 #endif /* PHYSICSENGINE_H_ */
