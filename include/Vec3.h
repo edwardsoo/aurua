@@ -70,6 +70,13 @@ public:
 		return *this;
 	}
 
+	Vec3& operator/=(double scalar) {
+		x /= scalar;
+		y /= scalar;
+		z /= scalar;
+		return *this;
+	}
+
 	// return sum of 2 vectors
 	Vec3 operator+(Vec3 other) {
 		return Vec3(x + other.x, y + other.y, z + other.z);
@@ -83,6 +90,11 @@ public:
 	// return scaled vector
 	Vec3 operator*(double scalar) {
 		return Vec3(x * scalar, y * scalar, z * scalar);
+	}
+
+	// return scaled vector
+	Vec3 operator/(double scalar) {
+		return Vec3(x / scalar, y / scalar, z / scalar);
 	}
 
 	// dot product with other vector

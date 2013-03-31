@@ -11,16 +11,12 @@
 
 class Object {
 public:
-	Object();
+	Object(Vec3 _pos, Vec3 _vel, float _radius);
 	virtual ~Object();
-	Vec3 get_position();
-	Vec3 get_velocity();
-	void set_position(Vec3);
-	void set_velocity(Vec3);
-
-private:
+	bool collide(Object*);
 	Vec3 pos;
 	Vec3 vel;
+	float radius;
 };
 
 #endif /* OBJECT_H_ */

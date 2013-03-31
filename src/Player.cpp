@@ -1,19 +1,19 @@
 /*
- * Bolt.cpp
+ * Player.cpp
  *
  *  Created on: Mar 30, 2013
  *      Author: Edward
  */
 
-#include "Bolt.h"
+#include "Player.h"
 
-Bolt::Bolt(Vec3 _pos, Vec3 _vel, float _radius) :
+Player::Player(Vec3 _pos, Vec3 _vel, float _radius) :
 		Object(_pos, _vel, _radius) {
 	// TODO Auto-generated constructor stub
 
 }
 
-Bolt::~Bolt() {
+Player::~Player() {
 	// TODO Auto-generated destructor stub
 }
 

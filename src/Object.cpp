@@ -7,8 +7,10 @@
 
 #include "Object.h"
 
-Object::Object() {
-	// TODO Auto-generated constructor stub
+Object::Object(Vec3 _pos, Vec3 _vel, float _radius) {
+	pos = _pos;
+	vel = _vel;
+	radius = _radius;
 
 }
 
@@ -16,18 +18,12 @@ Object::~Object() {
 	// TODO Auto-generated destructor stub
 }
 
-Vec3 Object::get_position() {
-	return pos;
-}
-
-Vec3 Object::get_velocity() {
-	return vel;
-}
-
-void Object::set_position(Vec3 _pos) {
-	pos = _pos;
-}
-
-void Object::set_velocity(Vec3 _vel) {
-	vel = _vel;
+bool Object::collide(Object *other) {
+	float distance = (pos - other->pos).length();
+	// Check if objects are overlapping
+	if (distance < (radius + other->radius)) {
+		// Check if objects are moving toward each other
+		return (vel - other->vel).dot(pos - other->pos) < 0;
+	}
+	return false;
 }
