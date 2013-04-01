@@ -30,6 +30,7 @@ namespace Terrain
 	const float Z_CP_5 = 1;
 
 	GLfloat* terrain;
+	GLfloat* normals;
 	GLint* indices;
 	int num_indices;
 
@@ -65,8 +66,10 @@ namespace Terrain
 
 	void init_terrain()
 	{
-		generate_terrain(5);
-		indices = wind(5, 5);
+		int res = 50;
+		terrain = generate_terrain(res);
+		indices = wind(res, res);
+		normals = generate_normals(res);
 		srand(time(NULL));
 		printf(" ");
 	}
@@ -108,14 +111,16 @@ namespace Terrain
 				glVertex3f(-limit, 7, 0);
 			glEnd();*/
 			glEnableClientState( GL_VERTEX_ARRAY );	 // Enable Vertex Arrays
+			glEnableClientState( GL_NORMAL_ARRAY );
 			glVertexPointer(3, GL_FLOAT, 0, terrain);
+			glNormalPointer(GL_FLOAT, 0, normals);
 			glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
 		glPopMatrix();
 	}
 
-	void generate_terrain(int res)
+	GLfloat* generate_terrain(int res)
 	{
-		terrain = new float[3 * res * res];
+		GLfloat* vertices = new float[3 * res * res];
 
 		int x, y, z;
 		int currIndex = 0;
@@ -154,12 +159,72 @@ namespace Terrain
 				{
 					max_height = 5;
 				}
-				terrain[currIndex + 0] = xStart + xStep * x;
-				terrain[currIndex + 1] = rand() % max_height;
-				terrain[currIndex + 2] = yStart + yStep * y;
+				vertices[currIndex + 0] = xStart + xStep * x;
+				vertices[currIndex + 1] = rand() % max_height;
+				vertices[currIndex + 2] = yStart + yStep * y;
+
 				currIndex += 3;
 			}
 		}
+
+		return vertices;
+	}
+
+	GLfloat* generate_normals(int res)
+	{
+		GLfloat* normals = new float[3 * res * res];
+		int x, y, z;
+		int currIndex = 0;
+
+		Vec3 current;
+		Vec3 right;
+		Vec3 up;
+		Vec3 n;
+
+		int upIndex = 0;
+
+		for (y = 0; y < res - 1; y++)
+		{
+			for (x = 0; x < res - 1; x++)
+			{
+				current = Vec3(terrain[currIndex],
+						terrain[currIndex + 1],
+						terrain[currIndex + 2]);
+
+				right = Vec3(terrain[currIndex + 3],
+							terrain[currIndex + 4],
+							terrain[currIndex + 5]);
+
+				upIndex = currIndex + res * 3;
+				up = Vec3(terrain[upIndex],
+							terrain[upIndex + 1],
+							terrain[upIndex + 2]);
+
+				n = normal(current, right, up);
+
+				normals[currIndex] = n[0];
+				normals[currIndex + 1] = n[1];
+				normals[currIndex + 2] = n[2];
+				currIndex += 3;
+			}
+
+			//What do do at the edge? Leave them undefined for now
+			normals[currIndex] = 0;
+			normals[currIndex + 1] = 0;
+			normals[currIndex + 2] = 0;
+			currIndex += 3;
+		}
+
+		for (x = 0; x < res; x++)
+		{
+			//What do do at the edge? Leave them undefined for now
+			normals[currIndex] = 0;
+			normals[currIndex + 1] = 0;
+			normals[currIndex + 2] = 0;
+			currIndex += 3;
+		}
+
+		return normals;
 	}
 
 	/**
@@ -277,6 +342,15 @@ namespace Terrain
 			indices[wind_index + 1] = vertex + totalX;
 		}
 		return indices;
+	}
+
+	Vec3 normal(Vec3& vert_normal, Vec3& vert_right, Vec3& vert_up) {
+		Vec3 vn1 = vert_right - vert_normal;
+		Vec3 vn2 = vert_up - vert_normal;
+
+		Vec3 norm = vn1.cross(vn2);
+		norm.normalize();
+		return norm;
 	}
 
 }
