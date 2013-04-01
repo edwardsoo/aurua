@@ -179,7 +179,7 @@ namespace Terrain
 	 * This function simply connects neighboring vertices,
 	 * first going in the horizontal direction, then vertical.
 	 */
-	int* windLines(int totalX, int totalY)
+	int* wind_lines(int totalX, int totalY)
 	{
 		int horizLines = (totalX - 1) * 2 * totalY;
 		int vertLines = (totalY - 1) * 2 * totalX;
