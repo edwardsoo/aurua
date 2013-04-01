@@ -11,7 +11,7 @@ Vec3 normalize(Vec3 a, Vec3 b, double length) {
 }
 
 void draw_crosshair(float h_w_ratio) {
-	glColor4f(0.2, 0.5, 0, 0.5);
+	glColor4f(0.4, 1.0, 0, 0.5);
 	glBegin (GL_LINES);
 	glVertex3f(0, -0.05, 0);
 	glVertex3f(0, -0.01, 0);

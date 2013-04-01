@@ -18,3 +18,6 @@ Player::~Player() {
 	delete cam;
 }
 
+Vec3 Player::get_eye() {
+	return pos + Vec3(0, radius, 0);
+}

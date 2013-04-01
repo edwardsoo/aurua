@@ -15,7 +15,7 @@ using std::vector;
 
 class PhysicsEngine {
 public:
-	static const float GRAVITY = 8.0f;
+	static const float GRAVITY = -9.8f;
 	PhysicsEngine(Vec3 min, Vec3 max);
 	virtual ~PhysicsEngine();
 	void advance_state(float t);
