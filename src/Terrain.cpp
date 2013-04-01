@@ -66,6 +66,7 @@ namespace Terrain
 	{
 		generate_terrain();
 		indices = windLines(100, 100);
+		printf(" ");
 	}
 
 	void draw_terrain()
@@ -138,6 +139,10 @@ namespace Terrain
 		}
 	}
 
+	/**
+	 * This function simply connects neighboring vertices,
+	 * first going in the horizontal direction, then vertical.
+	 */
 	short* windLines(int totalX, int totalY)
 	{
 		int horizLines = (totalX - 1) * 2 * totalY;
@@ -145,32 +150,33 @@ namespace Terrain
 		num_indices = horizLines + vertLines;
 		short* indices = new short[num_indices];
 		int y, x;
-		short vertex; short id = 0;
+		short vertex; int id = 0;
+
+		//Horizontal winding
+		short vertex_id = 0;
 		for (y = 0; y < totalY; y++) {
-			for (x = 0; x < totalX; x++) {
-				if (x < totalX - 1) {
-					vertex = (short) (x + y * totalX * 2 - y * 2);
-					indices[vertex + x] = id;
-					indices[vertex + x + 1] = (short) (id + 1);
-				}
-				id++;
+			for (x = 0; x < totalX - 1; x++) {
+				indices[id] = vertex_id;
+				indices[id + 1] = (short) (vertex_id + 1);
+				id += 2;
+				vertex_id++;
 			}
+			vertex_id++;
 		}
 
-		//wind vertically
-		id = 0;
+		short second_vertex;
+		//Wind vertically
 		for (x = 0; x < totalX; x++) {
-			id = (short) x;
-			for (y = 0; y < totalY; y++) {
-				if (y < totalY - 1) {
-					vertex = (short) (y + x * totalY * 2 - x * 2);
-					indices[horizLines + vertex + y] = id;
-					indices[horizLines + vertex + y + 1] = (short) (id + totalX);
-				}
-				id+=totalX;
+			vertex_id = x;
+			for (y = 0; y < totalY - 1; y++) {
+				indices[id] = vertex_id;
+				second_vertex = vertex_id + totalX;
+				indices[id + 1] = second_vertex;
+				vertex_id = second_vertex;
+				id += 2;
 			}
-
 		}
+
 		return indices;
 	}
 
