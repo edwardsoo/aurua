@@ -31,9 +31,6 @@
 
 using namespace std;
 
-PhysicsEngine* phys;
-Player* player;
-
 int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -135,7 +132,6 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 	int current_window = glutGetWindow();
 	key_states[key] = true;
 	if (key == 27) {
-		cleanup();
 		exit(0);
 	}
 	if (current_window == cam_window) {
@@ -280,7 +276,7 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_rot_speed * dx / disp_width;
 		double y_rad = cam_rot_speed * dy / disp_height;
 
-		player->cam->rotate_view(x_rad, y_rad);
+		game.player->cam->rotate_view(x_rad, y_rad);
 		/*
 		 if (dx != 0 || dy != 0) {
 		 printf("dx=%f dy=%f ", x_rad, y_rad);
@@ -441,8 +437,8 @@ void draw_3D() {
 	glLoadIdentity();
 
 	// Camera is on top of player
-	Vec3 pos = player->pos + Vec3(0, player->radius, 0);
-	Camera* cam = player->cam;
+	Vec3 pos = game.player->pos + Vec3(0,game.player->radius,0);
+	Camera* cam = game.player->cam;
 	Vec3 center = pos + cam->view;
 	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z, cam->up.x,
 			cam->up.y, cam->up.z);
@@ -549,7 +545,6 @@ void update_state() {
 
 void idle(int value) {
 	if (is_quit) {
-		cleanup();
 		exit(0);
 	}
 

@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "Game.h"
+
 // Texture ID
 #define TITLE 0
 #define SKY_Q1 TITLE+1
@@ -48,5 +50,7 @@ double cam_rot_speed = 1.0;
 
 void idle(int);
 void motion_callback(int x, int y);
+
+Game game;
 
 #endif
