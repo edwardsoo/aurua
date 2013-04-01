@@ -9,14 +9,16 @@
 #define PLAYER_H_
 
 #include "Object.h"
+#include "Camera.h"
 
 class Player: public Object {
 public:
-	Player(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass);
+	Player(Vec3, Vec3, Vec3, float, float);
 	virtual ~Player();
 	void regenerate();
 
 	int life, stamina;
+	Camera* cam;
 };
 
 #endif /* PLAYER_H_ */

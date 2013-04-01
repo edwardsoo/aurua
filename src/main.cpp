@@ -26,10 +26,14 @@
 #include "Vec3.h"
 #include "Utils.h"
 #include "Geometry.h"
+#include "PhysicsEngine.h"
+#include "Player.h"
 
 using namespace std;
 
-Camera cam;
+PhysicsEngine* phys;
+Player* player;
+Camera *cam;
 
 int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
@@ -72,6 +76,13 @@ void init() {
 	glEnable(GL_LIGHT1);
 	glEnable(GL_COLOR_MATERIAL);
 
+	// Player initialization
+	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
+	cam = player->cam;
+
+	// Collision stuff
+	phys = new PhysicsEngine(Vec3(-1000, -1000, -1000), Vec3(1000, 1000, 1000));
+
 }
 
 // free any allocated objects and return
@@ -79,7 +90,8 @@ void cleanup() {
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your teardown code here! //////////////////////
 	/////////////////////////////////////////////////////////////
-
+	delete phys;
+	delete player;
 }
 
 const int DIMENSIONS = 3;
@@ -201,12 +213,12 @@ void keys_consumer() {
 		// Camera view relative vectors
 		Vec3 cam_f;
 		if (!special_states[GLUT_KEY_F1]) {
-			cam_f = Vec3(cam.view.x, 0, cam.view.z);
+			cam_f = Vec3(cam->view.x, 0, cam->view.z);
 		} else {
-			cam_f = cam.view;
+			cam_f = cam->view;
 		}
 		cam_f.normalize();
-		Vec3 cam_r = cam_f.cross(cam.up);
+		Vec3 cam_r = cam_f.cross(cam->up);
 		cam_r.normalize();
 
 		Vec3 cam_dir(0, 0, 0);
@@ -225,7 +237,7 @@ void keys_consumer() {
 			cam_dir.normalize();
 		}
 
-		cam.pos += cam_dir * speed;
+		cam->pos += cam_dir * speed;
 	}
 }
 
@@ -259,7 +271,7 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_rot_speed * dx / disp_width;
 		double y_rad = cam_rot_speed * dy / disp_height;
 
-		cam.rotate_view(x_rad, y_rad);
+		cam->rotate_view(x_rad, y_rad);
 		/*
 		 if (dx != 0 || dy != 0) {
 		 printf("dx=%f dy=%f ", x_rad, y_rad);
@@ -356,7 +368,6 @@ void print_stroke_string(void* font, char* s) {
 	}
 }
 
-
 // TODO SHIT DOESN'T WORK
 void print_life() {
 	int width = glutGet(GLUT_WINDOW_WIDTH );
@@ -377,9 +388,9 @@ void print_life() {
 	GLboolean valid;
 	glGetDoublev(GL_CURRENT_RASTER_POSITION, tmp);
 	glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
-	print_vector(tmp);
-	printf("%s\n", valid ? "valid" : "INVALID");
-	glRasterPos2f(200,0);
+	//print_vector(tmp);
+	//printf("%s\n", valid ? "valid" : "INVALID");
+	glRasterPos2f(200, 0);
 	print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_24, string);
 	//print_stroke_string(GLUT_STROKE_ROMAN, string);
 }
@@ -419,9 +430,10 @@ void draw_3D() {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	Vec3 center = cam.pos + cam.view;
-	gluLookAt(cam.pos.x, cam.pos.y, cam.pos.z, center.x, center.y, center.z,
-			cam.up.x, cam.up.y, cam.up.z);
+
+	Vec3 center = cam->pos + cam->view;
+	gluLookAt(cam->pos.x, cam->pos.y, cam->pos.z, center.x, center.y, center.z,
+			cam->up.x, cam->up.y, cam->up.z);
 
 	/*
 	 float tmp[16];glPushMatrix();
@@ -560,11 +572,6 @@ int main(int argc, char **argv) {
 			in_value[x] = 0;
 		}
 	}
-
-	cam = Camera();
-	cam.pos = Vec3(0, 5, 0);
-	cam.view = Vec3(0, 0, 1);
-	cam.up = Vec3(0, 1, 0);
 
 // initialize glut
 	glutInit(&argc, argv);
