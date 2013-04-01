@@ -58,7 +58,7 @@ GLfloat ctrlpoints[4][4][3] = {
 	}
 };
 
-void init()
+void init_terrain()
 {
 	generate_terrain();
 	indices = windLines(100, 100);
@@ -100,8 +100,8 @@ void draw_terrain()
 			glVertex3f(-limit,0,limit);
 			glVertex3f(-limit, 7, 0);
 		glEnd();*/
-		glVertexPointer(3, GL_FLOAT, 0, terrain);
-		glDrawElements(GL_LINES, , GL_UNSIGNED_SHORT, )
+		//glVertexPointer(3, GL_FLOAT, 0, terrain);
+		//glDrawElements(GL_LINES, , GL_UNSIGNED_SHORT, )
 	glPopMatrix();
 }
 
