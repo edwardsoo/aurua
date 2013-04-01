@@ -34,6 +34,9 @@
 
 using namespace std;
 
+GLfloat position0[] = { 10.0, 10.0, 10.0, 0.0 };
+GLfloat position1[] = { -10.0, 50.0, -10.0, 0.0 };
+
 int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -54,18 +57,21 @@ void gl_init() {
 
 	// lighting stuff
 	GLfloat ambient[] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat diffuse[] = { 0.9, 0.9, 0.9, 1.0 };
+	GLfloat diffuse[] = { 0.8, 0.8, 0.8, 1.0 };
 	GLfloat specular[] = { 0.4, 0.4, 0.4, 1.0 };
-	GLfloat position0[] = { 1.0, 1.0, 1.0, 0.0 };
+
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
-	GLfloat position1[] = { -1.0, -1.0, -1.0, 0.0 };
-	glLightfv(GL_LIGHT1, GL_POSITION, position1);
-	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+
+	GLfloat ambient2[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat diffuse2[] = { 0.8, 0.8, 0.8, 1.0 };
+	GLfloat specular2[] = { 0.5, 0.5, 0.5, 1.0 };
+
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient2);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse2);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular2);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -507,6 +513,8 @@ void draw_3D() {
 	 glMultMatrixf(tmp);
 	 glPopMatrix();*/
 
+	glLightfv(GL_LIGHT0, GL_POSITION, position0);
+	glLightfv(GL_LIGHT1, GL_POSITION, position1);
 	draw_scene();
 
 }
