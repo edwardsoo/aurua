@@ -18,17 +18,17 @@ Octree::Octree(Bound _bound, bool _is_leaf) :
 		Vec3 mid = (min + max) / 2;
 		child_bounds[0][0][0] = Bound(min, mid);
 		child_bounds[0][0][1] = Bound(Vec3(mid.x, min.y, min.z),
-				Vec3(max.x, mid.y, mid.z));
+				Vec3(max.x, mid.y, mid.z)); //Q 1
 		child_bounds[0][1][0] = Bound(Vec3(min.x, mid.y, min.z),
-				Vec3(mid.x, max.y, mid.z));
+				Vec3(mid.x, max.y, mid.z)); //Q 2
 		child_bounds[0][1][1] = Bound(Vec3(mid.x, mid.y, min.z),
-				Vec3(max.x, max.y, mid.z));
+				Vec3(max.x, max.y, mid.z)); //Q 3
 		child_bounds[1][0][0] = Bound(Vec3(min.x, min.y, mid.z),
-				Vec3(mid.x, mid.y, max.z));
+				Vec3(mid.x, mid.y, max.z)); //Q 6
 		child_bounds[1][0][1] = Bound(Vec3(mid.x, min.y, mid.z),
-				Vec3(max.x, mid.y, max.z));
+				Vec3(max.x, mid.y, max.z)); //Q 5
 		child_bounds[1][1][0] = Bound(Vec3(min.x, mid.y, mid.z),
-				Vec3(mid.x, max.y, max.z));
+				Vec3(mid.x, max.y, max.z)); //Q 8
 		child_bounds[1][1][1] = Bound(mid, max);
 	}
 }
@@ -55,7 +55,7 @@ void Octree::add(Object* obj) {
 		for (y = 0; y < 2; y++) {
 			for (z = 0; z < 2; z++) {
 				if (children[z][y][x] == NULL) {
-					if (child_bounds[z][y][x].get_volume() < 125000) {
+					if (child_bounds[z][y][x].get_volume() < MIN_TREE_VOLUME) {
 						children[z][y][x] = new Octree(child_bounds[z][y][x],
 								true);
 					} else {

@@ -22,6 +22,7 @@ public:
 private:
 	vector<Object*> objects;
 	Octree* octree;
+	void add_object(Object*);
 	void update_objects_position(float t);
 	void handle_collisions();
 	void reflect_objects(Object*, Object*);

@@ -17,6 +17,11 @@ PhysicsEngine::~PhysicsEngine() {
 	// TODO Auto-generated destructor stub
 }
 
+void PhysicsEngine::add_object(Object* o)
+{
+	this->objects.push_back(o);
+}
+
 void PhysicsEngine::advance_state(float t) {
 	update_objects_position(t);
 	handle_collisions();
