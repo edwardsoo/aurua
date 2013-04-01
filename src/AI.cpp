@@ -6,6 +6,7 @@
  */
 
 #include "AI.h"
+#include "Object.h"
 
 AI::AI()
 {
@@ -28,6 +29,12 @@ void AI::kill_enemy()
 {
 }
 
+void AI::set_enemy(Object* enemy)
+{
+	this->enemy = enemy;
+}
+
 Vec3 AI::get_enemy_pos()
 {
+	return this->enemy->pos;
 }
