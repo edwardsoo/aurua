@@ -42,10 +42,7 @@ int sky_stacks = 16;
 
 // set up opengl state, allocate objects, etc.  This gets called
 // ONCE PER WINDOW, so don't allocate your objects twice!
-void init() {
-	/////////////////////////////////////////////////////////////
-	/// TODO: Put your initialization code here! ////////////////
-	/////////////////////////////////////////////////////////////
+void gl_init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -73,8 +70,9 @@ void init() {
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_COLOR_MATERIAL);
-
-	// Collision stuff
+}
+void game_init() {
+	// game physics
 	game.phys = new PhysicsEngine(Vec3(-1000, -1000, -1000),
 			Vec3(1000, 1000, 1000));
 
@@ -85,9 +83,15 @@ void init() {
 
 	// Other objects
 	Drone* drone = new Drone(Vec3(-5, 5, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
-
+	game.phys->add(drone);
+	drone = new Drone(Vec3(-2, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
+	game.phys->add(drone);
+	drone = new Drone(Vec3(-3, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
+	game.phys->add(drone);
+	drone = new Drone(Vec3(-5, 5, -1), Vec3(0, 0, 0), Vec3(0, 0, 0));
 	game.phys->add(drone);
 
+	// Terrains
 	Terrain::init_terrain();
 }
 
@@ -218,6 +222,11 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 
 void player_move(Vec3 mov_dir) {
 	double max_speed = WALK_SPEED;
+	// No movement input, "brake" to stop sliding
+	if (mov_dir == Vec3(0, 0, 0)) {
+		game.player->acc = game.player->vel * -SLOW;
+		return;
+	}
 #if _WIN32
 	// return states of the left shift key
 	if (GetKeyState(VK_LSHIFT) & 0x80) {
@@ -459,8 +468,8 @@ void draw_3D() {
 
 	//This is for Bezier surface
 	/*glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
-	glEnable(GL_MAP2_VERTEX_3);
-	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);*/
+	 glEnable(GL_MAP2_VERTEX_3);
+	 glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);*/
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -655,7 +664,8 @@ int main(int argc, char **argv) {
 	glutPassiveMotionFunc(motion_callback);
 	glutMotionFunc(motion_callback);
 	glutSetWindow(cam_window);
-	init();
+	gl_init();
+	game_init();
 
 	// load image and create textures
 	create_textures();

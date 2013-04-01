@@ -33,13 +33,14 @@ Drone::~Drone() {
 
 void Drone::draw() {
 	glPushMatrix();
-		glutSolidSphere(.5, 20, 20);
-		glTranslatef(0, 0, -.5);
-		glColor3f(0, 1, 0);
-		glutSolidSphere(.3, 20, 20);
-		glTranslatef(0, 0, .5);
-		glScalef(1, 0.2, 1);
-		glColor3f(1, 0, 0);
-		glutSolidCube(1);
-		glPopMatrix();
+	glColor3f(1, 1, 1);
+	glutSolidSphere(.5, 20, 20);
+	glTranslatef(0, 0, -.5);
+	glColor3f(0, 1, 0);
+	glutSolidSphere(.3, 20, 20);
+	glTranslatef(0, 0, .5);
+	glScalef(1, 0.2, 1);
+	glColor3f(1, 0, 0);
+	glutSolidCube(1);
+	glPopMatrix();
 }
