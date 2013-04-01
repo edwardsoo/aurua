@@ -234,7 +234,6 @@ void player_move(Vec3 mov_dir) {
 		dir_vel_len = 1;
 	}
 	double acc_mod = 4 - (mov_dir.dot(game.player->vel) / dir_vel_len + 2);
-	printf("acc_mod %f\n", acc_mod);
 	game.player->acc = mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
 	//debug_player(player);
 }

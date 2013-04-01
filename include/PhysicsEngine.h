@@ -27,6 +27,7 @@ private:
 	void add_object(Object*);
 	void update_objects_position(float t);
 	void handle_collisions();
+	void apply_global(float t);
 	void reflect_objects(Object*, Object*);
 	void rebounce_objects(Object*, Object*);
 };

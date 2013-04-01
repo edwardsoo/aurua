@@ -10,7 +10,7 @@
 
 #include "PhysicsEngine.h"
 
-static const double FRICTION = 0.95 ;
+static const double FRICTION = 0.8;
 
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
@@ -28,6 +28,7 @@ void PhysicsEngine::add_object(Object* o) {
 void PhysicsEngine::advance_state(float t) {
 	update_objects_position(t);
 	handle_collisions();
+	apply_global(t);
 }
 
 void PhysicsEngine::update_objects_position(float dt_ms) {
@@ -40,13 +41,11 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 		// Accelerate
 		if (obj->acc.length() != 0) {
 			obj->vel += obj->acc * dt_sec;
+			obj->acc = Vec3(0, 0, 0);
 		}
 
 		// Move object
 		obj->pos += obj->vel * dt_sec;
-
-		// Apply shitty physics friction
-		obj->vel -= obj->vel * dt_sec * FRICTION;
 
 		octree->remove(obj);
 		octree->add(obj);
@@ -65,6 +64,17 @@ void PhysicsEngine::handle_collisions() {
 			// reflect_objects(obj_1, obj_2);
 			rebounce_objects(obj_1, obj_2);
 		}
+	}
+}
+
+void PhysicsEngine::apply_global(float dt_ms) {
+	float dt_sec = dt_ms / 1000.0;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
+			itr++) {
+		Object* obj = *itr;
+
+		// Apply shitty physics friction
+		obj->vel *= pow(1 - FRICTION, dt_sec);
 	}
 }
 
@@ -92,10 +102,15 @@ void PhysicsEngine::rebounce_objects(Object* obj_1, Object* obj_2) {
 	debug_vec3(obj_1->vel);
 	debug_vec3(obj_2->vel);
 
-	Vec3 mo_1 = obj_1->vel * obj_1->mass;
-	Vec3 mo_2 = obj_2->vel * obj_2->mass;
-	obj_1->vel = mo_2 / obj_1->mass;
-	obj_2->vel = mo_1 / obj_2->mass;
+	float net_mass = obj_1->mass + obj_2->mass;
+	float net_magnitude = obj_2->vel.length() + obj_1->vel.length();
+	Vec3 disp_1 = obj_1->pos - obj_2->pos;
+	disp_1.normalize();
+	Vec3 disp_2 = obj_2->pos - obj_1->pos;
+	disp_2.normalize();
+
+	obj_1->vel = disp_1 * (net_magnitude * (obj_2->mass / net_mass));
+	obj_2->vel = disp_2 * (net_magnitude * (obj_1->mass / net_mass));
 
 	printf("After:\n");
 	debug_vec3(obj_1->vel);
