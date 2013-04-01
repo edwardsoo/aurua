@@ -19,50 +19,14 @@
 
 namespace Terrain
 {
-
-	const float X_CP = -1.5;
-	const float X_CP_2 = -.5;
-
-	const float Z_CP_1 = 3;
-	const float Z_CP_2 = 2;
-	const float Z_CP_3 = 3;
-	const float Z_CP_4 = 00;
-	const float Z_CP_5 = 1;
-
 	GLfloat* terrain;
 	GLfloat* normals;
 	GLint* indices;
 	int num_indices;
 
-	GLfloat ctrlpoints[4][4][3] = {
-		{
-				{-X_CP, -X_CP, Z_CP_1},
-				{-X_CP_2, -X_CP, Z_CP_2},
-				{X_CP_2, -X_CP, -Z_CP_5},
-				{X_CP, -X_CP, Z_CP_2}
-		},
-
-		{
-				{-X_CP, -X_CP_2, Z_CP_5},
-				{-X_CP_2, -X_CP_2, Z_CP_3},
-				{X_CP_2, -X_CP_2, Z_CP_4},
-				{X_CP, -X_CP_2, -Z_CP_5}
-		},
-
-		{
-				{-X_CP, X_CP_2, Z_CP_1},
-				{-X_CP_2, X_CP_2, Z_CP_4},
-				{X_CP_2, X_CP_2, Z_CP_3},
-				{X_CP, X_CP_2, Z_CP_1}
-		},
-
-		{
-				{-X_CP, X_CP, -Z_CP_2},
-				{-X_CP_2, X_CP, -Z_CP_2},
-				{X_CP_2, X_CP, Z_CP_4},
-				{X_CP, X_CP, -Z_CP_5}
-		}
-	};
+	const float CORNER_HEIGHT = 30;
+	const float EDGE_HEIGHT = 10;
+	const float NORMAL_HEIGHT = 5;
 
 	void init_terrain()
 	{
@@ -76,40 +40,9 @@ namespace Terrain
 
 	void draw_terrain()
 	{
-		/*glColor3f(1.0, 1.0, 1.0);
-
-		glPushMatrix();
-		glRotatef(90.0, 1.0, 0, 0);
-		glScalef(40, 40, 40);
-		int i, j;
-		for (j = 0; j <= 8; j++)
-		{
-			glBegin (GL_LINE_STRIP);
-			for (i = 0; i <= 30; i++)
-				glEvalCoord2f((GLfloat) i / 30.0, (GLfloat) j / 8.0);
-			glEnd();
-			glBegin(GL_LINE_STRIP);
-			for (i = 0; i <= 30; i++)
-				glEvalCoord2f((GLfloat) j / 8.0, (GLfloat) i / 30.0);
-			glEnd();
-		}
-		glPopMatrix();*/
 		glColor3f(.94,.89,.69);
 		float limit = 3;
 		glPushMatrix();
-			/*glTranslatef(5, 0, -10);
-			glBegin(GL_POLYGON);
-				/*glVertex3f(0,0,0);
-				glVertex3f(2,0,0);
-				glVertex3f(2,0,2);
-				glVertex3f(0,0,2);*/
-				/*glVertex3f(-limit, 0, -limit);
-
-				glVertex3f(limit,0,-limit);
-				glVertex3f(limit,0,limit);
-				glVertex3f(-limit,0,limit);
-				glVertex3f(-limit, 7, 0);
-			glEnd();*/
 			glEnableClientState( GL_VERTEX_ARRAY );	 // Enable Vertex Arrays
 			glEnableClientState( GL_NORMAL_ARRAY );
 			glVertexPointer(3, GL_FLOAT, 0, terrain);
@@ -149,15 +82,17 @@ namespace Terrain
 
 				if (is_edge_x && is_edge_y)
 				{
-					max_height = 30;
+					// make terrain much higher at corners
+					max_height = CORNER_HEIGHT;
 				}
 				else if (is_edge_x || is_edge_y)
 				{
-					max_height = 10;
+					// make terrain higher at edges
+					max_height = EDGE_HEIGHT;
 				}
 				else
 				{
-					max_height = 5;
+					max_height = NORMAL_HEIGHT;
 				}
 				vertices[currIndex + 0] = xStart + xStep * x;
 				vertices[currIndex + 1] = rand() % max_height;
