@@ -8,7 +8,7 @@
 #ifndef TERRAIN_H_
 #define TERRAIN_H_
 
-#include<GL/gl.h>
+#include <GL/gl.h>
 #include "Vec3.h"
 
 namespace Terrain
@@ -21,7 +21,7 @@ namespace Terrain
 	GLfloat* generate_terrain(int res);
 	void draw_terrain();
 
-	int* windLines(int totalX, int totalY);
+	int* wind_lines(int totalX, int totalY);
 	int* wind(int totalX, int totalY);
 
 	Vec3 normal(Vec3& vert_normal, Vec3& vert_right, Vec3& vert_up);
