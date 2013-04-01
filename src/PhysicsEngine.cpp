@@ -10,7 +10,7 @@
 
 #include "PhysicsEngine.h"
 
-static const double FRICTION = 0.9;
+static const double FRICTION = 0.95 ;
 
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
@@ -37,13 +37,16 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 		Object* obj = *itr;
 		Vec3 old_pos = obj->pos;
 
-		// Accelerate or apply shitty physics friction
+		// Accelerate
 		if (obj->acc.length() != 0) {
 			obj->vel += obj->acc * dt_sec;
-		} else {
-			obj->vel -= obj->vel * (dt_sec * FRICTION);
 		}
+
+		// Move object
 		obj->pos += obj->vel * dt_sec;
+
+		// Apply shitty physics friction
+		obj->vel -= obj->vel * dt_sec * FRICTION;
 
 		octree->remove(obj);
 		octree->add(obj);
@@ -59,7 +62,6 @@ void PhysicsEngine::handle_collisions() {
 		Object* obj_1 = pair.obj_1;
 		Object* obj_2 = pair.obj_2;
 		if (obj_1->collide(obj_2)) {
-			printf("COLLISION\n");
 			// reflect_objects(obj_1, obj_2);
 			rebounce_objects(obj_1, obj_2);
 		}

@@ -177,6 +177,12 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 		case 'D':
 			key_states['d'] = true;
 			break;
+		case 'r':
+		case 'R':
+			game.player->pos = Vec3(5, 5, 5);
+			game.player->vel = Vec3(0, 0, 0);
+			game.player->acc = Vec3(0, 0, 0);
+			break;
 		default:
 			break;
 		}
@@ -209,55 +215,66 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 	}
 }
 
-void player_move() {
-
+void player_move(Vec3 mov_dir) {
+	double max_speed = WALK_SPEED;
+#if _WIN32
+	// return states of the left shift key
+	if (GetKeyState(VK_LSHIFT) & 0x80) {
+		max_speed = RUN_SPEED;
+	}
+#endif
+	double curr_speed = game.player->vel.length();
+	// prevent releasing shift to generate a negative scalar
+	if (curr_speed > max_speed) {
+		curr_speed = max_speed;
+	}
+	// accelerate slowly if acc and view align
+	double dir_vel_len = mov_dir.length() * game.player->vel.length();
+	if (dir_vel_len < 1) {
+		dir_vel_len = 1;
+	}
+	double acc_mod = 4 - (mov_dir.dot(game.player->vel) / dir_vel_len + 2);
+	printf("acc_mod %f\n", acc_mod);
+	game.player->acc = mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
+	//debug_player(player);
 }
 
 void keys_consumer() {
 	int current_window = glutGetWindow();
 
 	if (current_window == cam_window) {
-		double speed = WALK_SPEED;
-#if _WIN32
-		// return states of the left shift key
-		if (GetKeyState(VK_LSHIFT) & 0x80) {
-			speed = RUN_SPEED;
-		}
-#endif
 
 		// Camera view relative vectors
-		Vec3 vel_f, vel_r, vel_dir;
+		Vec3 mov_f, mov_r, mov_dir;
 		Camera* cam = game.player->cam;
 
-		vel_dir = Vec3(0, 0, 0);
+		mov_dir = Vec3(0, 0, 0);
 		if (!special_states[GLUT_KEY_F1]) {
 			// walk mode
-			vel_f = Vec3(cam->view.x, 0, cam->view.z);
+			mov_f = Vec3(cam->view.x, 0, cam->view.z);
 		} else {
 			// fly mode
-			vel_f = cam->view;
+			mov_f = cam->view;
 		}
-		vel_f.normalize();
+		mov_f.normalize();
 		// for side strafe
-		vel_r = vel_f.cross(cam->up);
-		vel_r.normalize();
+		mov_r = mov_f.cross(cam->up);
+		mov_r.normalize();
 
 		if (key_states['w']) {
-			vel_dir += vel_f;
+			mov_dir += mov_f;
 		} else if (key_states['s']) {
-			vel_dir -= vel_f;
+			mov_dir -= mov_f;
 		}
 		if (key_states['d']) {
-			vel_dir += vel_r;
+			mov_dir += mov_r;
 		} else if (key_states['a']) {
-			vel_dir -= vel_r;
+			mov_dir -= mov_r;
 		}
-		if (vel_dir != Vec3(0, 0, 0)) {
-			vel_dir.normalize();
+		if (mov_dir != Vec3(0, 0, 0)) {
+			mov_dir.normalize();
 		}
-
-		game.player->vel = vel_dir * speed;
-		//debug_player(player);
+		player_move(mov_dir);
 	}
 }
 

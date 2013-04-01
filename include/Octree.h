@@ -22,7 +22,7 @@ class Octree {
 
 public:
 
-	static const float MIN_TREE_VOLUME = 1000000000;
+	static const float MIN_TREE_VOLUME = 8000;
 	Octree(Bound, bool);
 	virtual ~Octree();
 	void add(Object* obj);

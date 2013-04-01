@@ -13,6 +13,7 @@
 
 static const float WALK_SPEED = 50.0f;
 static const float RUN_SPEED = 100.0f;
+static const float ACC = 100.0f;
 
 class Player: public Character {
 public:
