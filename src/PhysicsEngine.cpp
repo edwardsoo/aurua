@@ -8,7 +8,8 @@
 #include "PhysicsEngine.h"
 #include <vector>
 
-PhysicsEngine::PhysicsEngine(Bound bound) {
+PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
+	Bound bound = Bound(min, max);
 	octree = new Octree(bound, false);
 }
 
