@@ -16,10 +16,11 @@ namespace Terrain
 	extern GLfloat ctrlpoints[4][4][3];
 
 	void init_terrain();
-	void generate_terrain();
+	void generate_terrain(int res);
 	extern void draw_terrain();
 
-	short* windLines(int totalX, int totalY);
+	int* windLines(int totalX, int totalY);
+	int* wind(int totalX, int totalY);
 
 }
 #endif /* TERRAIN_H_ */

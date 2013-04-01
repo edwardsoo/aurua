@@ -15,6 +15,7 @@
 
 #include "Game.h"
 #include "stdlib.h"
+#include "time.h"
 
 namespace Terrain
 {
@@ -29,7 +30,7 @@ namespace Terrain
 	const float Z_CP_5 = 1;
 
 	GLfloat* terrain;
-	GLshort* indices;
+	GLint* indices;
 	int num_indices;
 
 	GLfloat ctrlpoints[4][4][3] = {
@@ -64,8 +65,10 @@ namespace Terrain
 
 	void init_terrain()
 	{
-		generate_terrain();
-		indices = windLines(100, 100);
+		generate_terrain(5);
+		indices = wind(5, 5);
+		srand(time(NULL));
+		printf(" ");
 	}
 
 	void draw_terrain()
@@ -88,7 +91,7 @@ namespace Terrain
 			glEnd();
 		}
 		glPopMatrix();*/
-		glColor3f(.7,.8,.3);
+		glColor3f(.94,.89,.69);
 		float limit = 3;
 		glPushMatrix();
 			/*glTranslatef(5, 0, -10);
@@ -106,70 +109,133 @@ namespace Terrain
 			glEnd();*/
 			glEnableClientState( GL_VERTEX_ARRAY );	 // Enable Vertex Arrays
 			glVertexPointer(3, GL_FLOAT, 0, terrain);
-			glDrawElements(GL_LINES, num_indices, GL_UNSIGNED_SHORT, indices);
+			glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
 		glPopMatrix();
 	}
 
-	void generate_terrain()
+	void generate_terrain(int res)
 	{
-		terrain = new float[30000];
+		terrain = new float[3 * res * res];
 
 		int x, y, z;
 		int currIndex = 0;
 
 		float xStart = -AREA_LIMIT;
 		float xEnd = AREA_LIMIT;
-		float xStep = (xEnd - xStart) / 100;
+		float xStep = (xEnd - xStart) / res;
 
 		float yStart = -AREA_LIMIT;
 		float yEnd = AREA_LIMIT;
-		float yStep = (yEnd - yStart) / 100;
+		float yStep = (yEnd - yStart) / res;
 
-		for (y = 0; y < 100; y++)
+		int max_height;
+		bool is_edge_y;
+		bool is_edge_x;
+
+		int lower_edge = res * 0.3;
+		int upper_edge = res * 0.7;
+
+		for (y = 0; y < res; y++)
 		{
-			//currIndex = 100 * y;
-			for (x = 0; x < 100; x++)
+			is_edge_y = (y < lower_edge || y > upper_edge);
+			for (x = 0; x < res; x++)
 			{
+				is_edge_x = (x < lower_edge || x > upper_edge);
+
+				if (is_edge_x && is_edge_y)
+				{
+					max_height = 60;
+				}
+				else if (is_edge_x || is_edge_y)
+				{
+					max_height = 30;
+				}
+				else
+				{
+					max_height = 5;
+				}
 				terrain[currIndex + 0] = xStart + xStep * x;
-				terrain[currIndex + 1] = rand() % 5;
+				terrain[currIndex + 1] = rand() % max_height;
 				terrain[currIndex + 2] = yStart + yStep * y;
 				currIndex += 3;
 			}
 		}
 	}
 
-	short* windLines(int totalX, int totalY)
+	/**
+	 * Wind lines for wireframe terrain.
+	 * This function simply connects neighboring vertices,
+	 * first going in the horizontal direction, then vertical.
+	 */
+	int* windLines(int totalX, int totalY)
 	{
 		int horizLines = (totalX - 1) * 2 * totalY;
 		int vertLines = (totalY - 1) * 2 * totalX;
 		num_indices = horizLines + vertLines;
-		short* indices = new short[num_indices];
+		int* indices = new int[num_indices];
 		int y, x;
-		short vertex; short id = 0;
+		int vertex; int id = 0;
+
+		//Horizontal winding
+		int vertex_id = 0;
 		for (y = 0; y < totalY; y++) {
-			for (x = 0; x < totalX; x++) {
-				if (x < totalX - 1) {
-					vertex = (short) (x + y * totalX * 2 - y * 2);
-					indices[vertex + x] = id;
-					indices[vertex + x + 1] = (short) (id + 1);
-				}
-				id++;
+			for (x = 0; x < totalX - 1; x++) {
+				indices[id] = vertex_id;
+				indices[id + 1] = vertex_id + 1;
+				id += 2;
+				vertex_id++;
+			}
+			vertex_id++;
+		}
+
+		int second_vertex;
+		//Wind vertically
+		for (x = 0; x < totalX; x++) {
+			vertex_id = x;
+			for (y = 0; y < totalY - 1; y++) {
+				indices[id] = vertex_id;
+				second_vertex = vertex_id + totalX;
+				indices[id + 1] = second_vertex;
+				vertex_id = second_vertex;
+				id += 2;
 			}
 		}
 
-		//wind vertically
-		id = 0;
-		for (x = 0; x < totalX; x++) {
-			id = (short) x;
-			for (y = 0; y < totalY; y++) {
-				if (y < totalY - 1) {
-					vertex = (short) (y + x * totalY * 2 - x * 2);
-					indices[horizLines + vertex + y] = id;
-					indices[horizLines + vertex + y + 1] = (short) (id + totalX);
-				}
-				id+=totalX;
-			}
+		return indices;
+	}
 
+	int* wind(int totalX, int totalY) {
+		// How many times to do the horizontal winding procedure
+		int all = totalX * (totalY - 1);
+		int addNum = 2 * totalX - 3;
+		int loopNum = 1 + (addNum - 1) / 2;
+		int adds = (totalY - 2) * addNum;
+		num_indices = 2 * all + adds;
+		int* indices = new int[num_indices];
+		int index; int row = 0; int add = 0; int y; int loopIndex; int pos;
+		int vertex; int col;
+		for (int x = 0; x < all * 2; x++) {
+			col = (x - row * totalX * 2) / 2;
+			if (col % totalX == 0 && x / 2 >= totalX) {
+				//new row
+				row = x / 2 / totalX;
+				loopIndex = row * totalX * 2 + add;
+				for (y = 0; y < loopNum; y++) {
+					if (y == 0) {
+						indices[loopIndex + y] = indices[loopIndex - 1];
+					} else {
+						indices[loopIndex + 2 * y - 1] = indices[loopIndex - 1 - 2 * y];
+						indices[loopIndex + 2 * y] = indices[loopIndex - 1 - 2 * y];
+					}
+				}
+				add = row * (2 * totalX - 3);
+				col = 0;
+			}
+			index = x + add;
+			vertex = col + row * totalX;
+			indices[index] = vertex;
+			indices[index + 1] = vertex + totalX;
+			x++;
 		}
 		return indices;
 	}
