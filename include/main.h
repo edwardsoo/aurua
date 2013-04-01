@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "Game.h"
+
 // Texture ID
 #define TITLE 0
 #define SKY_Q1 TITLE+1
@@ -27,7 +29,8 @@ bool special_states[256];
 
 // window handles
 int main_window, cam_window;
-unsigned long prev_time;
+unsigned long prev_fps_time;
+unsigned long prev_phys_time;
 int frame_passed = 0;
 char win_title[32] = { 0 };
 
@@ -47,5 +50,7 @@ double cam_rot_speed = 1.0;
 
 void idle(int);
 void motion_callback(int x, int y);
+
+Game game;
 
 #endif
