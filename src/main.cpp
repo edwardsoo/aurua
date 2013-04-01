@@ -34,8 +34,8 @@
 
 using namespace std;
 
-GLfloat position0[] = { 10.0, 10.0, 10.0, 0.0 };
-GLfloat position1[] = { -10.0, 50.0, -10.0, 0.0 };
+GLfloat position0[] = { 10.0, 1.0, 10.0, 0.0 };
+GLfloat position1[] = { -10.0, 2.0, -10.0, 0.0 };
 
 int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ void gl_init() {
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
-	GLfloat ambient2[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat ambient2[] = { 0.1, 0.1, 0.1, 1.0 };
 	GLfloat diffuse2[] = { 0.8, 0.8, 0.8, 1.0 };
 	GLfloat specular2[] = { 0.5, 0.5, 0.5, 1.0 };
 
