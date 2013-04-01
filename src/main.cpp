@@ -377,8 +377,8 @@ void print_life() {
 	GLboolean valid;
 	glGetDoublev(GL_CURRENT_RASTER_POSITION, tmp);
 	glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
-	print_vector(tmp);
-	printf("%s\n", valid ? "valid" : "INVALID");
+	//print_vector(tmp);
+	//printf("%s\n", valid ? "valid" : "INVALID");
 	glRasterPos2f(200,0);
 	print_bitmap_string(GLUT_BITMAP_TIMES_ROMAN_24, string);
 	//print_stroke_string(GLUT_STROKE_ROMAN, string);

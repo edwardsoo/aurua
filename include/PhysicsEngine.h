@@ -16,9 +16,11 @@ using std::vector;
 class PhysicsEngine {
 public:
 	static const float GRAVITY = 8.0f;
-	PhysicsEngine();
+	PhysicsEngine(Bound bound);
 	virtual ~PhysicsEngine();
 	void advance_state(float t);
+	void add(Object* obj);
+	void remove(Object* obj);
 private:
 	vector<Object*> objects;
 	Octree* octree;

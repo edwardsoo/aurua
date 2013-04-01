@@ -8,13 +8,12 @@
 #include "PhysicsEngine.h"
 #include <vector>
 
-PhysicsEngine::PhysicsEngine() {
-	// TODO Auto-generated constructor stub
-
+PhysicsEngine::PhysicsEngine(Bound bound) {
+	octree = new Octree(bound, false);
 }
 
 PhysicsEngine::~PhysicsEngine() {
-	// TODO Auto-generated destructor stub
+	delete octree;
 }
 
 void PhysicsEngine::advance_state(float t) {
@@ -52,5 +51,13 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 	n.normalize();
 	obj_1->vel -= n * (n.dot(obj_1->vel)) * 2;
 	obj_2->vel -= n * (n.dot(obj_2->vel)) * 2;
+}
+
+void PhysicsEngine::add(Object* obj) {
+	octree->add(obj);
+}
+
+void PhysicsEngine::remove(Object* obj) {
+	octree->remove(obj);
 }
 
