@@ -8,6 +8,8 @@
 #include<GL/glut.h>
 #endif
 
+#include "Game.h"
+
 // debug matrix
 void print_matrix(double* m) {
 	printf("%f %f %f %f\n%f %f %f %f\n %f %f %f %f\n%f %f %f %f\n\n", m[0],
@@ -124,15 +126,14 @@ bool invert_pose(float *m) {
 }
 
 void draw_grid() {
-	float limit = 1000;
 	float unit = 5;
-	for (float i = -limit; i <= limit; i += unit) {
+	for (float i = -AREA_LIMIT; i <= AREA_LIMIT; i += unit) {
 		glBegin(GL_LINES);
 		glColor4f(1, 1, 1, 0.5);
-		glVertex3f(-limit, 0, i);
-		glVertex3f(limit, 0, i);
-		glVertex3f(i, 0, -limit);
-		glVertex3f(i, 0, limit);
+		glVertex3f(-AREA_LIMIT, 0, i);
+		glVertex3f(AREA_LIMIT, 0, i);
+		glVertex3f(i, 0, -AREA_LIMIT);
+		glVertex3f(i, 0, AREA_LIMIT);
 		glEnd();
 	}
 }

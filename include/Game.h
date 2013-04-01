@@ -11,6 +11,8 @@
 #include "PhysicsEngine.h"
 #include "Player.h"
 
+const float AREA_LIMIT = 1000;
+
 class Game
 {
 public:
