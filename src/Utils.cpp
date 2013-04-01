@@ -19,12 +19,6 @@ void print_matrix(double* m) {
 }
 
 // debug vector
-void print_vector(Vec3 vec3) {
-	printf("%f %f %f\n", vec3.x, vec3.y, vec3.z);
-
-}
-
-// debug vector
 void print_vector(double* m) {
 	printf("%f %f %f %f\n", m[0], m[1], m[2], m[3]);
 }
@@ -36,8 +30,20 @@ void debug_camera(Camera* cam) {
 }
 
 // debug Vec3
-void debug_vec3(Vec3 *vec) {
-	printf("x=%f y=%f z=%f\n", vec->x, vec->y, vec->z);
+void debug_vec3(Vec3 vec) {
+	printf("Vec3: x=%f y=%f z=%f\n", vec.x, vec.y, vec.z);
+}
+
+// debug Player
+void debug_player(Player *player) {
+	printf("Player:\n");
+	printf("pos: x=%f y=%f z=%f\n", player->pos.x, player->pos.y,
+			player->pos.z);
+	printf("vel: x=%f y=%f z=%f\n", player->vel.x, player->vel.y,
+			player->vel.z);
+	printf("acc: x=%f y=%f z=%f\n", player->acc.x, player->acc.y,
+			player->acc.z);
+	printf("\n");
 }
 
 // get system time in ms, only useful for time difference

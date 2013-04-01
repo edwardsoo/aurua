@@ -13,8 +13,6 @@ Octree::Octree(Bound _bound, bool _is_leaf) :
 	bound = _bound;
 	Vec3 min = bound.min;
 	Vec3 max = bound.max;
-	print_vector(min);
-	print_vector(max);
 	is_leaf = _is_leaf;
 	if (!is_leaf) {
 		Vec3 mid = (min + max) / 2;
@@ -52,23 +50,23 @@ void Octree::add(Object* obj) {
 	int x, y, z;
 	if (is_leaf) {
 		objects.insert(obj);
+		return;
 	}
 	for (x = 0; x < 2; x++) {
 		for (y = 0; y < 2; y++) {
 			for (z = 0; z < 2; z++) {
 				if (child_bounds[z][y][x].contains(obj)) {
-					printf("%d%d%d volume=%f\n", z, x, y,
-							child_bounds[z][y][x].get_volume());
 					if (children[z][y][x] == NULL) {
-						if (child_bounds[z][y][x].get_volume() < MIN_TREE_VOLUME) {
+						if (child_bounds[z][y][x].get_volume()
+								< MIN_TREE_VOLUME) {
 							children[z][y][x] = new Octree(
 									child_bounds[z][y][x], true);
 						} else {
 							children[z][y][x] = new Octree(
 									child_bounds[z][y][x], false);
 						}
-						children[z][y][x]->add(obj);
 					}
+					children[z][y][x]->add(obj);
 				}
 			}
 		}
@@ -77,21 +75,37 @@ void Octree::add(Object* obj) {
 
 void Octree::remove(Object* obj) {
 	int x, y, z;
-	if (!bound.contains(obj)) {
-		return;
-	}
 	if (is_leaf) {
 		objects.erase(obj);
 	}
 	for (x = 0; x < 2; x++) {
 		for (y = 0; y < 2; y++) {
 			for (z = 0; z < 2; z++) {
-				if (children[z][y][x] != NULL) {
+				if (children[z][y][x] != NULL
+						&& child_bounds[z][y][x].contains(obj)) {
 					children[z][y][x]->remove(obj);
 				}
 			}
 		}
 	}
+}
+
+int Octree::size() {
+	int x, y, z;
+	if (is_leaf) {
+		return objects.size();
+	}
+	int sum = 0;
+	for (x = 0; x < 2; x++) {
+		for (y = 0; y < 2; y++) {
+			for (z = 0; z < 2; z++) {
+				if (children[z][y][x] != NULL) {
+					sum += children[z][y][x]->size();
+				}
+			}
+		}
+	}
+	return sum;
 }
 
 void Octree::get_object_pairs(vector<ObjectPair> &pairs) {

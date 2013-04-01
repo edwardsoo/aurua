@@ -8,28 +8,26 @@
 #ifndef OCTREE_H_
 #define OCTREE_H_
 
-#include <stdio.h>
 #include <set>
 #include <stdlib.h>
 #include <vector>
 
 #include "Object.h"
 #include "Bound.h"
-#include "Utils.h"
 
 using std::vector;
 using std::set;
-
 
 class Octree {
 
 public:
 
-	static const float MIN_TREE_VOLUME = 125000;
+	static const float MIN_TREE_VOLUME = 1000000000;
 	Octree(Bound, bool);
 	virtual ~Octree();
 	void add(Object* obj);
 	void remove(Object* obj);
+	int size();
 	void get_object_pairs(vector<ObjectPair> &pairs);
 
 private:

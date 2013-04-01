@@ -21,14 +21,14 @@ public:
 	void advance_state(float t);
 	void add(Object* obj);
 	void remove(Object* obj);
-	set<Object*>::iterator objects_iterator();
-private:
 	set<Object*> objects;
+private:
 	Octree* octree;
 	void add_object(Object*);
 	void update_objects_position(float t);
 	void handle_collisions();
 	void reflect_objects(Object*, Object*);
+	void rebounce_objects(Object*, Object*);
 };
 
 #endif /* PHYSICSENGINE_H_ */

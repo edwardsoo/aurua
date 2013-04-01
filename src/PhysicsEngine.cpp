@@ -5,8 +5,12 @@
  *      Author: Edward
  */
 
-#include "PhysicsEngine.h"
 #include <vector>
+#include <stdio.h>
+
+#include "PhysicsEngine.h"
+
+static const double FRICTION = 0.9;
 
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
@@ -17,8 +21,7 @@ PhysicsEngine::~PhysicsEngine() {
 	delete octree;
 }
 
-void PhysicsEngine::add_object(Object* o)
-{
+void PhysicsEngine::add_object(Object* o) {
 	this->objects.insert(o);
 }
 
@@ -27,17 +30,23 @@ void PhysicsEngine::advance_state(float t) {
 	handle_collisions();
 }
 
-void PhysicsEngine::update_objects_position(float t) {
-	unsigned int i;
-	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end(); itr++) {
+void PhysicsEngine::update_objects_position(float dt_ms) {
+	float dt_sec = dt_ms / 1000.0;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
+			itr++) {
 		Object* obj = *itr;
 		Vec3 old_pos = obj->pos;
-		obj->vel += obj->acc*t;
-		obj->pos += obj->vel*t;
-		if (obj->pos != old_pos) {
-			octree->remove(obj);
-			octree->add(obj);
+
+		// Accelerate or apply shitty physics friction
+		if (obj->acc.length() != 0) {
+			obj->vel += obj->acc * dt_sec;
+		} else {
+			obj->vel -= obj->vel * (dt_sec * FRICTION);
 		}
+		obj->pos += obj->vel * dt_sec;
+
+		octree->remove(obj);
+		octree->add(obj);
 	}
 }
 
@@ -50,7 +59,9 @@ void PhysicsEngine::handle_collisions() {
 		Object* obj_1 = pair.obj_1;
 		Object* obj_2 = pair.obj_2;
 		if (obj_1->collide(obj_2)) {
-			reflect_objects(obj_1, obj_2);
+			printf("COLLISION\n");
+			// reflect_objects(obj_1, obj_2);
+			rebounce_objects(obj_1, obj_2);
 		}
 	}
 }
@@ -59,23 +70,43 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 	// Reflect object velocities around normal of collision
 	// disregard momentum, no energy loss
 	// vel' = vel - 2*(n*(n dot vel))
+	printf("Before:\n");
+	debug_vec3(obj_1->vel);
+	debug_vec3(obj_2->vel);
+
 	Vec3 n = obj_1->pos - obj_2->pos;
+	float net_mass = obj_1->mass + obj_2->mass;
 	n.normalize();
-	obj_1->vel -= n * (n.dot(obj_1->vel)) * 2;
-	obj_2->vel -= n * (n.dot(obj_2->vel)) * 2;
+	obj_1->vel -= n * (n.dot(obj_1->vel)) * 2 * (obj_2->mass / net_mass);
+	obj_2->vel -= n * (n.dot(obj_2->vel)) * 2 * (obj_1->mass / net_mass);
+
+	printf("After:\n");
+	debug_vec3(obj_1->vel);
+	debug_vec3(obj_2->vel);
+}
+
+void PhysicsEngine::rebounce_objects(Object* obj_1, Object* obj_2) {
+	printf("Before:\n");
+	debug_vec3(obj_1->vel);
+	debug_vec3(obj_2->vel);
+
+	Vec3 mo_1 = obj_1->vel * obj_1->mass;
+	Vec3 mo_2 = obj_2->vel * obj_2->mass;
+	obj_1->vel = mo_2 / obj_1->mass;
+	obj_2->vel = mo_1 / obj_2->mass;
+
+	printf("After:\n");
+	debug_vec3(obj_1->vel);
+	debug_vec3(obj_2->vel);
 }
 
 void PhysicsEngine::add(Object* obj) {
 	objects.insert(obj);
-	//octree->add(obj);
+	octree->add(obj);
 }
 
 void PhysicsEngine::remove(Object* obj) {
 	objects.erase(obj);
 	octree->remove(obj);
-}
-
-set<Object*>::iterator PhysicsEngine::objects_iterator() {
-	return objects.begin();
 }
 

@@ -29,6 +29,7 @@
 #include "PhysicsEngine.h"
 #include "Player.h"
 #include "Terrain.h"
+#include "Drone.h"
 
 using namespace std;
 
@@ -72,6 +73,36 @@ void init() {
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_COLOR_MATERIAL);
+
+	// Collision stuff
+	game.phys = new PhysicsEngine(Vec3(-1000, -1000, -1000),
+			Vec3(1000, 1000, 1000));
+
+	// Player initializations
+	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 2.5,
+			10);
+	game.phys->add(game.player);
+
+	// Other objects
+	Drone* drone = new Drone(Vec3(-5, 5, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
+
+	game.phys->add(drone);
+
+}
+
+// free any allocated objects and return
+void cleanup() {
+	/////////////////////////////////////////////////////////////
+	/// TODO: Put your teardown code here! //////////////////////
+	/////////////////////////////////////////////////////////////
+
+	set<Object*>::iterator itr;
+	for (itr = game.phys->objects.begin(); itr != game.phys->objects.end();
+			itr++) {
+		Object* obj = *itr;
+		delete obj;
+	}
+	delete game.phys;
 }
 
 const int DIMENSIONS = 3;
@@ -129,6 +160,7 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 				glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 				glutPassiveMotionFunc(NULL);
 			} else {
+				prev_phys_time = get_system_time();
 				glutTimerFunc(TIMER_MS, idle, 0);
 				glutPassiveMotionFunc(motion_callback);
 			}
@@ -177,47 +209,55 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 	}
 }
 
+void player_move() {
+
+}
+
 void keys_consumer() {
 	int current_window = glutGetWindow();
 
 	if (current_window == cam_window) {
-		double speed = 0.5;
+		double speed = WALK_SPEED;
 #if _WIN32
 		// return states of the left shift key
 		if (GetKeyState(VK_LSHIFT) & 0x80) {
-			speed = 1.0;
+			speed = RUN_SPEED;
 		}
 #endif
 
 		// Camera view relative vectors
-		Vec3 acc_f;
+		Vec3 vel_f, vel_r, vel_dir;
 		Camera* cam = game.player->cam;
-		if (!special_states[GLUT_KEY_F1]) {
-			acc_f = Vec3(cam->view.x, 0, cam->view.z);
-		} else {
-			acc_f = cam->view;
-		}
-		acc_f.normalize();
-		Vec3 acc_r = acc_f.cross(cam->up);
-		acc_r.normalize();
 
-		Vec3 acc_dir(0, 0, 0);
+		vel_dir = Vec3(0, 0, 0);
+		if (!special_states[GLUT_KEY_F1]) {
+			// walk mode
+			vel_f = Vec3(cam->view.x, 0, cam->view.z);
+		} else {
+			// fly mode
+			vel_f = cam->view;
+		}
+		vel_f.normalize();
+		// for side strafe
+		vel_r = vel_f.cross(cam->up);
+		vel_r.normalize();
+
 		if (key_states['w']) {
-			acc_dir += acc_f;
+			vel_dir += vel_f;
 		} else if (key_states['s']) {
-			acc_dir -= acc_f;
+			vel_dir -= vel_f;
 		}
 		if (key_states['d']) {
-			acc_dir += acc_r;
+			vel_dir += vel_r;
 		} else if (key_states['a']) {
-			acc_dir -= acc_r;
+			vel_dir -= vel_r;
 		}
-		if (acc_dir != Vec3(0, 0, 0)) {
-			// debug_vec3(&cam_dir);
-			acc_dir.normalize();
+		if (vel_dir != Vec3(0, 0, 0)) {
+			vel_dir.normalize();
 		}
 
-		game.player->acc = acc_dir;
+		game.player->vel = vel_dir * speed;
+		//debug_player(player);
 	}
 }
 
@@ -261,19 +301,6 @@ void motion_callback(int x, int y) {
 	}
 }
 
-void modelChildShip() {
-	glPushMatrix();
-	glutSolidSphere(.5, 20, 20);
-	glTranslatef(0, 0, -.5);
-	glColor3f(0, 1, 0);
-	glutSolidSphere(.3, 20, 20);
-	glTranslatef(0, 0, .5);
-	glScalef(1, 0.2, 1);
-	glColor3f(1, 0, 0);
-	glutSolidCube(1);
-	glPopMatrix();
-}
-
 void draw_sky() {
 	// Draw textured sky hemisphere
 	if (!sky_init) {
@@ -301,11 +328,21 @@ void draw_sky() {
 
 }
 
+void draw_objects() {
+	set<Object*>::iterator itr;
+	for (itr = game.phys->objects.begin(); itr != game.phys->objects.end();
+			itr++) {
+		glPushMatrix();
+		Object* obj = *itr;
+		glTranslatef(obj->pos.x, obj->pos.y, obj->pos.z);
+		obj->draw();
+		glPopMatrix();
+	}
+}
+
 void draw_scene() {
 	glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslatef(0, 5, 10);
-	modelChildShip();
+	draw_objects();
 	glPopMatrix();
 	//draw_grid();
 	glPushMatrix();
@@ -403,8 +440,7 @@ void draw_3D() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4,
-		0, 1, 12, 4, &ctrlpoints[0][0][0]);
+	glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
 	glEnable(GL_MAP2_VERTEX_3);
 	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
 
@@ -418,11 +454,11 @@ void draw_3D() {
 	glLoadIdentity();
 
 	// Camera is on top of player
-	Vec3 pos = game.player->pos + Vec3(0,game.player->radius,0);
+	Vec3 pos = game.player->pos + Vec3(0, game.player->radius, 0);
 	Camera* cam = game.player->cam;
 	Vec3 center = pos + cam->view;
-	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z,
-			cam->up.x, cam->up.y, cam->up.z);
+	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z, cam->up.x,
+			cam->up.y, cam->up.z);
 
 	/*
 	 float tmp[16];glPushMatrix();
@@ -514,6 +550,16 @@ void render() {
 	glutSwapBuffers();
 }
 
+void update_state() {
+	unsigned long curr_time = get_system_time();
+	int current_window = glutGetWindow();
+	if (current_window == cam_window) {
+		unsigned long dt = curr_time - prev_phys_time;
+		prev_phys_time = curr_time;
+		game.phys->advance_state(dt);
+	}
+}
+
 void idle(int value) {
 	if (is_quit) {
 		exit(0);
@@ -523,6 +569,7 @@ void idle(int value) {
 	//glutPostRedisplay();
 
 	if (!paused) {
+		update_state();
 		glutSetWindow(cam_window);
 		glutPostRedisplay();
 		glutTimerFunc(TIMER_MS, idle, 0);

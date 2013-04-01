@@ -8,16 +8,16 @@
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
-#include "Object.h"
+#include "Character.h"
 #include "Camera.h"
 
-class Player: public Object {
+static const float WALK_SPEED = 50.0f;
+static const float RUN_SPEED = 100.0f;
+
+class Player: public Character {
 public:
 	Player(Vec3, Vec3, Vec3, float, float);
 	virtual ~Player();
-	void regenerate();
-
-	int life, stamina;
 	Camera* cam;
 };
 

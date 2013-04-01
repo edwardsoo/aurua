@@ -36,3 +36,7 @@ bool Object::collide(Object *other) {
 	}
 	return false;
 }
+
+void Object::draw() {
+
+}

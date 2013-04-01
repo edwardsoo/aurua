@@ -28,7 +28,7 @@ public:
 	}
 
 	// assign other vector components to self
-	Vec3& operator=(const Vec3 rhs) {
+	Vec3 operator=(const Vec3 rhs) {
 		if (this == &rhs)
 			return *this;
 		x = rhs.x;
@@ -45,7 +45,7 @@ public:
 		return !(x == other.x && y == other.y && z == other.z);
 	}
 
-	Vec3& operator+=(const Vec3 rhs) {
+	Vec3 operator+=(const Vec3 rhs) {
 		if (this == &rhs)
 			return *this;
 		x += rhs.x;
@@ -54,7 +54,7 @@ public:
 		return *this;
 	}
 
-	Vec3& operator-=(const Vec3 rhs) {
+	Vec3 operator-=(const Vec3 rhs) {
 		if (this == &rhs)
 			return *this;
 		x -= rhs.x;
@@ -63,14 +63,14 @@ public:
 		return *this;
 	}
 
-	Vec3& operator*=(double scalar) {
+	Vec3 operator*=(double scalar) {
 		x *= scalar;
 		y *= scalar;
 		z *= scalar;
 		return *this;
 	}
 
-	Vec3& operator/=(double scalar) {
+	Vec3 operator/=(double scalar) {
 		x /= scalar;
 		y /= scalar;
 		z /= scalar;
