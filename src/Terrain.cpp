@@ -205,37 +205,76 @@ namespace Terrain
 	}
 
 	int* wind(int totalX, int totalY) {
-		// How many times to do the horizontal winding procedure
-		int all = totalX * (totalY - 1);
-		int addNum = 2 * totalX - 3;
-		int loopNum = 1 + (addNum - 1) / 2;
-		int adds = (totalY - 2) * addNum;
-		num_indices = 2 * all + adds;
+		// How many times to wind vertically
+		int wind_vert = totalX * (totalY - 1);
+
+		// How many indices for one connection
+		int indices_wind = 2 * totalX;
+
+		// How many degenerates are added per row (2(x-2) + 1)
+		int degen_row = indices_wind - 3;
+		// How many degenerates in total
+		int degen_total = (totalY - 2) * degen_row;
+
+		// How many iterations are required for a degenerate row
+		int degen_loops = totalX - 1;
+
+		num_indices = 2 * wind_vert + degen_total;
+
 		int* indices = new int[num_indices];
-		int index; int row = 0; int add = 0; int y; int loopIndex; int pos;
-		int vertex; int col;
-		for (int x = 0; x < all * 2; x++) {
-			col = (x - row * totalX * 2) / 2;
-			if (col % totalX == 0 && x / 2 >= totalX) {
+		int wind_index;
+
+		int row = 0, col = 0;
+
+		// What to add to the index because of the degenerates
+		int degen_add = 0;
+		int degen_lv; //Loop variable for degenerates
+		int degen_lv2; //2x loop variable
+
+		// Which vertex index the degenerate is using
+		int degen_connect;
+
+		// Which index in the winding array we are dealing with right now
+		int degen_index;
+
+		// The index of the vertex in the vertex array
+		int vertex;
+
+		for (int x = 0; x < wind_vert; x++) {
+			col = x - row * totalX;
+
+			if (col % totalX == 0 && x >= totalX) {
 				//new row
-				row = x / 2 / totalX;
-				loopIndex = row * totalX * 2 + add;
-				for (y = 0; y < loopNum; y++) {
-					if (y == 0) {
-						indices[loopIndex + y] = indices[loopIndex - 1];
+				row = x / totalX;
+
+				// The index of the first degenerate for this row
+				degen_index = row * indices_wind + degen_add;
+				for (degen_lv = 0; degen_lv < degen_loops; degen_lv++) {
+					if (degen_lv == 0)
+					{
+						//This is the first degenerate. It is simply the last vertex
+						indices[degen_index + degen_lv] = indices[degen_index - 1];
 					} else {
-						indices[loopIndex + 2 * y - 1] = indices[loopIndex - 1 - 2 * y];
-						indices[loopIndex + 2 * y] = indices[loopIndex - 1 - 2 * y];
+						degen_lv2 = 2 * degen_lv;
+
+						//Connect to the top vertices for this row (excluding first column)
+						degen_connect = indices[degen_index - 1 - 2 * degen_lv];
+						indices[degen_index + degen_lv2 - 1] = degen_connect;
+						indices[degen_index + degen_lv2] = degen_connect;
 					}
 				}
-				add = row * (2 * totalX - 3);
+
+				degen_add = row * degen_row; //How many degenerate indices in total
 				col = 0;
 			}
-			index = x + add;
+
+			//What index are we going to use for the winding
+			wind_index = x * 2 + degen_add;
 			vertex = col + row * totalX;
-			indices[index] = vertex;
-			indices[index + 1] = vertex + totalX;
-			x++;
+
+			//Winding from bottom row to top row
+			indices[wind_index] = vertex;
+			indices[wind_index + 1] = vertex + totalX;
 		}
 		return indices;
 	}
