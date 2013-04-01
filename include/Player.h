@@ -11,6 +11,9 @@
 #include "Object.h"
 #include "Camera.h"
 
+static const float WALK_SPEED = 50.0f;
+static const float RUN_SPEED = 100.0f;
+
 class Player: public Object {
 public:
 	Player(Vec3, Vec3, Vec3, float, float);

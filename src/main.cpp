@@ -79,8 +79,7 @@ void init() {
 	phys = new PhysicsEngine(Vec3(-1000, -1000, -1000), Vec3(1000, 1000, 1000));
 
 	// Player initializations
-
-	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
+	player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 2.5, 1);
 	phys->add(player);
 
 }
@@ -150,6 +149,7 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 				glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
 				glutPassiveMotionFunc(NULL);
 			} else {
+				prev_phys_time = get_system_time();
 				glutTimerFunc(TIMER_MS, idle, 0);
 				glutPassiveMotionFunc(motion_callback);
 			}
@@ -198,47 +198,55 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 	}
 }
 
+void player_move() {
+
+}
+
 void keys_consumer() {
 	int current_window = glutGetWindow();
 
 	if (current_window == cam_window) {
-		double speed = 0.5;
+		double speed = WALK_SPEED;
 #if _WIN32
 		// return states of the left shift key
 		if (GetKeyState(VK_LSHIFT) & 0x80) {
-			speed = 1.0;
+			speed = RUN_SPEED;
 		}
 #endif
 
 		// Camera view relative vectors
-		Vec3 acc_f;
+		Vec3 vel_f, vel_r, vel_dir;
 		Camera* cam = player->cam;
-		if (!special_states[GLUT_KEY_F1]) {
-			acc_f = Vec3(cam->view.x, 0, cam->view.z);
-		} else {
-			acc_f = cam->view;
-		}
-		acc_f.normalize();
-		Vec3 acc_r = acc_f.cross(cam->up);
-		acc_r.normalize();
 
-		Vec3 acc_dir(0, 0, 0);
+		vel_dir = Vec3(0, 0, 0);
+		if (!special_states[GLUT_KEY_F1]) {
+			// walk mode
+			vel_f = Vec3(cam->view.x, 0, cam->view.z);
+		} else {
+			// fly mode
+			vel_f = cam->view;
+		}
+		vel_f.normalize();
+		// for side strafe
+		vel_r = vel_f.cross(cam->up);
+		vel_r.normalize();
+
 		if (key_states['w']) {
-			acc_dir += acc_f;
+			vel_dir += vel_f;
 		} else if (key_states['s']) {
-			acc_dir -= acc_f;
+			vel_dir -= vel_f;
 		}
 		if (key_states['d']) {
-			acc_dir += acc_r;
+			vel_dir += vel_r;
 		} else if (key_states['a']) {
-			acc_dir -= acc_r;
+			vel_dir -= vel_r;
 		}
-		if (acc_dir != Vec3(0, 0, 0)) {
-			// debug_vec3(&cam_dir);
-			acc_dir.normalize();
+		if (vel_dir != Vec3(0, 0, 0)) {
+			vel_dir.normalize();
 		}
 
-		player->acc = acc_dir;
+		player->vel = vel_dir * speed;
+		//debug_player(player);
 	}
 }
 
@@ -433,11 +441,11 @@ void draw_3D() {
 	glLoadIdentity();
 
 	// Camera is on top of player
-	Vec3 pos = player->pos + Vec3(0,player->radius,0);
+	Vec3 pos = player->pos + Vec3(0, player->radius, 0);
 	Camera* cam = player->cam;
 	Vec3 center = pos + cam->view;
-	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z,
-			cam->up.x, cam->up.y, cam->up.z);
+	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z, cam->up.x,
+			cam->up.y, cam->up.z);
 
 	/*
 	 float tmp[16];glPushMatrix();
@@ -529,6 +537,16 @@ void render() {
 	glutSwapBuffers();
 }
 
+void update_state() {
+	unsigned long curr_time = get_system_time();
+	int current_window = glutGetWindow();
+	if (current_window == cam_window) {
+		unsigned long dt = curr_time - prev_phys_time;
+		prev_phys_time = curr_time;
+		phys->advance_state(dt);
+	}
+}
+
 void idle(int value) {
 	if (is_quit) {
 		cleanup();
@@ -539,6 +557,7 @@ void idle(int value) {
 	//glutPostRedisplay();
 
 	if (!paused) {
+		update_state();
 		glutSetWindow(cam_window);
 		glutPostRedisplay();
 		glutTimerFunc(TIMER_MS, idle, 0);

@@ -2,28 +2,15 @@
 #define UTILS_H_
 
 #include "Camera.h"
+#include "Player.h"
 
-// debug matrix
 void print_matrix(double* m);
-
-// debug vector
-void print_vector(Vec3 vec3);
-
-// debug vector
 void print_vector(double* m);
-
-// debug camera
 void debug_camera(Camera* cam);
-
-// debug Vec3
-void debug_vec3(Vec3 *vec);
-
-// get system time in ms, only useful for time difference
+void debug_vec3(Vec3* vec);
+void debug_player(Player *player);
 unsigned long get_system_time();
-
-// inversion routine originally from MESA
 bool invert_pose(float *m);
-
 void draw_grid();
 
 #endif /* UTILS_H_ */

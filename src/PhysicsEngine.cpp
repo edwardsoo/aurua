@@ -17,8 +17,7 @@ PhysicsEngine::~PhysicsEngine() {
 	delete octree;
 }
 
-void PhysicsEngine::add_object(Object* o)
-{
+void PhysicsEngine::add_object(Object* o) {
 	this->objects.insert(o);
 }
 
@@ -27,13 +26,21 @@ void PhysicsEngine::advance_state(float t) {
 	handle_collisions();
 }
 
-void PhysicsEngine::update_objects_position(float t) {
-	unsigned int i;
-	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end(); itr++) {
+void PhysicsEngine::update_objects_position(float dt_ms) {
+	float dt_sec = dt_ms/1000.0;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
+			itr++) {
 		Object* obj = *itr;
 		Vec3 old_pos = obj->pos;
-		obj->vel += obj->acc*t;
-		obj->pos += obj->vel*t;
+
+
+		// Accelerate or apply shitty physics friction
+		if (obj->acc.length() != 0) {
+			obj->vel += obj->acc * dt_sec;
+		} else {
+			obj->vel = obj->vel/2;
+		}
+		obj->pos += obj->vel * dt_sec;
 		if (obj->pos != old_pos) {
 			octree->remove(obj);
 			octree->add(obj);
@@ -67,7 +74,7 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 
 void PhysicsEngine::add(Object* obj) {
 	objects.insert(obj);
-	//octree->add(obj);
+	octree->add(obj);
 }
 
 void PhysicsEngine::remove(Object* obj) {

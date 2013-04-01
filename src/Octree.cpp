@@ -13,8 +13,6 @@ Octree::Octree(Bound _bound, bool _is_leaf) :
 	bound = _bound;
 	Vec3 min = bound.min;
 	Vec3 max = bound.max;
-	print_vector(min);
-	print_vector(max);
 	is_leaf = _is_leaf;
 	if (!is_leaf) {
 		Vec3 mid = (min + max) / 2;
@@ -52,6 +50,7 @@ void Octree::add(Object* obj) {
 	int x, y, z;
 	if (is_leaf) {
 		objects.insert(obj);
+		return;
 	}
 	for (x = 0; x < 2; x++) {
 		for (y = 0; y < 2; y++) {
@@ -59,8 +58,10 @@ void Octree::add(Object* obj) {
 				if (child_bounds[z][y][x].contains(obj)) {
 					printf("%d%d%d volume=%f\n", z, x, y,
 							child_bounds[z][y][x].get_volume());
+
 					if (children[z][y][x] == NULL) {
-						if (child_bounds[z][y][x].get_volume() < MIN_TREE_VOLUME) {
+						if (child_bounds[z][y][x].get_volume()
+								< MIN_TREE_VOLUME) {
 							children[z][y][x] = new Octree(
 									child_bounds[z][y][x], true);
 						} else {
