@@ -307,7 +307,7 @@ void draw_scene() {
 	glTranslatef(0, 5, 10);
 	modelChildShip();
 	glPopMatrix();
-	draw_grid();
+	//draw_grid();
 	glPushMatrix();
 	draw_sky();
 	glPopMatrix();

@@ -11,6 +11,10 @@
 #include<GL/gl.h>
 
 extern GLfloat ctrlpoints[4][4][3];
+
+void generate_terrain();
 extern void draw_terrain();
+
+short* windLines(int totalX, int totalY);
 
 #endif /* TERRAIN_H_ */
