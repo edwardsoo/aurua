@@ -9,12 +9,25 @@
 
 AI::AI()
 {
-	// TODO Auto-generated constructor stub
-
+	this->state = AI_NORMAL;
 }
 
 AI::~AI()
 {
-	// TODO Auto-generated destructor stub
 }
 
+void AI::go_to_random_pos()
+{
+}
+
+void AI::evade_enemy()
+{
+}
+
+void AI::kill_enemy()
+{
+}
+
+Vec3 AI::get_enemy_pos()
+{
+}
