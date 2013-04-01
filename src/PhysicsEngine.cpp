@@ -24,9 +24,15 @@ void PhysicsEngine::advance_state(float t) {
 
 void PhysicsEngine::update_objects_position(float t) {
 	unsigned int i;
-	for (i = 0; i < objects.size(); i++) {
-		Object* obj = objects[i];
-		obj->pos += obj->vel;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end(); itr++) {
+		Object* obj = *itr;
+		Vec3 old_pos = obj->pos;
+		obj->vel += obj->acc*t;
+		obj->pos += obj->vel*t;
+		if (obj->pos != old_pos) {
+			octree->remove(obj);
+			octree->add(obj);
+		}
 	}
 }
 
@@ -55,10 +61,16 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 }
 
 void PhysicsEngine::add(Object* obj) {
-	octree->add(obj);
+	objects.insert(obj);
+	//octree->add(obj);
 }
 
 void PhysicsEngine::remove(Object* obj) {
+	objects.erase(obj);
 	octree->remove(obj);
+}
+
+set<Object*>::iterator PhysicsEngine::objects_iterator() {
+	return objects.begin();
 }
 

@@ -14,8 +14,6 @@ public:
 	Camera();
 	~Camera();
 	void rotate_view(double, double);
-
-	Vec3 pos;
 	Vec3 view;
 	Vec3 up;
 };

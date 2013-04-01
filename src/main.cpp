@@ -33,7 +33,6 @@ using namespace std;
 
 PhysicsEngine* phys;
 Player* player;
-Camera *cam;
 
 int sky_stacks = 16;
 //////////////////////////////////////////////////////////////////
@@ -76,12 +75,13 @@ void init() {
 	glEnable(GL_LIGHT1);
 	glEnable(GL_COLOR_MATERIAL);
 
-	// Player initialization
-	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
-	cam = player->cam;
-
 	// Collision stuff
 	phys = new PhysicsEngine(Vec3(-1000, -1000, -1000), Vec3(1000, 1000, 1000));
+
+	// Player initializations
+
+	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
+	phys->add(player);
 
 }
 
@@ -211,33 +211,34 @@ void keys_consumer() {
 #endif
 
 		// Camera view relative vectors
-		Vec3 cam_f;
+		Vec3 acc_f;
+		Camera* cam = player->cam;
 		if (!special_states[GLUT_KEY_F1]) {
-			cam_f = Vec3(cam->view.x, 0, cam->view.z);
+			acc_f = Vec3(cam->view.x, 0, cam->view.z);
 		} else {
-			cam_f = cam->view;
+			acc_f = cam->view;
 		}
-		cam_f.normalize();
-		Vec3 cam_r = cam_f.cross(cam->up);
-		cam_r.normalize();
+		acc_f.normalize();
+		Vec3 acc_r = acc_f.cross(cam->up);
+		acc_r.normalize();
 
-		Vec3 cam_dir(0, 0, 0);
+		Vec3 acc_dir(0, 0, 0);
 		if (key_states['w']) {
-			cam_dir += cam_f;
+			acc_dir += acc_f;
 		} else if (key_states['s']) {
-			cam_dir -= cam_f;
+			acc_dir -= acc_f;
 		}
 		if (key_states['d']) {
-			cam_dir += cam_r;
+			acc_dir += acc_r;
 		} else if (key_states['a']) {
-			cam_dir -= cam_r;
+			acc_dir -= acc_r;
 		}
-		if (cam_dir != Vec3(0, 0, 0)) {
+		if (acc_dir != Vec3(0, 0, 0)) {
 			// debug_vec3(&cam_dir);
-			cam_dir.normalize();
+			acc_dir.normalize();
 		}
 
-		cam->pos += cam_dir * speed;
+		player->acc = acc_dir;
 	}
 }
 
@@ -271,7 +272,7 @@ void motion_callback(int x, int y) {
 		double x_rad = cam_rot_speed * dx / disp_width;
 		double y_rad = cam_rot_speed * dy / disp_height;
 
-		cam->rotate_view(x_rad, y_rad);
+		player->cam->rotate_view(x_rad, y_rad);
 		/*
 		 if (dx != 0 || dy != 0) {
 		 printf("dx=%f dy=%f ", x_rad, y_rad);
@@ -340,11 +341,11 @@ void set_fps() {
 	int current_window = glutGetWindow();
 	if (current_window == cam_window) {
 		frame_passed++;
-		if (curr_time - prev_time > 1000.0) {
+		if (curr_time - prev_fps_time > 1000.0) {
 			sprintf(win_title, "%d fps", (int) frame_passed);
 			glutSetWindowTitle(win_title);
 			frame_passed = 0;
-			prev_time = curr_time;
+			prev_fps_time = curr_time;
 		}
 	}
 
@@ -431,8 +432,11 @@ void draw_3D() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	Vec3 center = cam->pos + cam->view;
-	gluLookAt(cam->pos.x, cam->pos.y, cam->pos.z, center.x, center.y, center.z,
+	// Camera is on top of player
+	Vec3 pos = player->pos + Vec3(0,player->radius,0);
+	Camera* cam = player->cam;
+	Vec3 center = pos + cam->view;
+	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z,
 			cam->up.x, cam->up.y, cam->up.z);
 
 	/*

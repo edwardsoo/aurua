@@ -8,12 +8,14 @@
 #ifndef OCTREE_H_
 #define OCTREE_H_
 
+#include <stdio.h>
 #include <set>
 #include <stdlib.h>
 #include <vector>
 
 #include "Object.h"
 #include "Bound.h"
+#include "Utils.h"
 
 using std::vector;
 using std::set;

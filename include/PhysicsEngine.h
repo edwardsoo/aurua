@@ -21,8 +21,9 @@ public:
 	void advance_state(float t);
 	void add(Object* obj);
 	void remove(Object* obj);
+	set<Object*>::iterator objects_iterator();
 private:
-	vector<Object*> objects;
+	set<Object*> objects;
 	Octree* octree;
 	void update_objects_position(float t);
 	void handle_collisions();
