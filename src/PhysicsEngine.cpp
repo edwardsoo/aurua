@@ -11,6 +11,7 @@
 #include "PhysicsEngine.h"
 
 static const double FRICTION = 0.8;
+static const double NORMAL_FORCE = 0.5;
 
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
@@ -98,12 +99,12 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 }
 
 void PhysicsEngine::rebounce_objects(Object* obj_1, Object* obj_2) {
-	printf("Before:\n");
-	debug_vec3(obj_1->vel);
-	debug_vec3(obj_2->vel);
-
 	float net_mass = obj_1->mass + obj_2->mass;
 	float net_magnitude = obj_2->vel.length() + obj_1->vel.length();
+	// separate immobile things
+	if (net_magnitude == 0) {
+		net_magnitude = NORMAL_FORCE;
+	}
 	Vec3 disp_1 = obj_1->pos - obj_2->pos;
 	disp_1.normalize();
 	Vec3 disp_2 = obj_2->pos - obj_1->pos;
@@ -111,10 +112,6 @@ void PhysicsEngine::rebounce_objects(Object* obj_1, Object* obj_2) {
 
 	obj_1->vel = disp_1 * (net_magnitude * (obj_2->mass / net_mass));
 	obj_2->vel = disp_2 * (net_magnitude * (obj_1->mass / net_mass));
-
-	printf("After:\n");
-	debug_vec3(obj_1->vel);
-	debug_vec3(obj_2->vel);
 }
 
 void PhysicsEngine::add(Object* obj) {
