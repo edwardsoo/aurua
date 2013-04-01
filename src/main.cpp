@@ -29,6 +29,7 @@
 #include "PhysicsEngine.h"
 #include "Player.h"
 #include "Terrain.h"
+#include "Drone.h"
 
 using namespace std;
 
@@ -74,11 +75,18 @@ void init() {
 	glEnable(GL_COLOR_MATERIAL);
 
 	// Collision stuff
-	phys = new PhysicsEngine(Vec3(-1000, -1000, -1000), Vec3(1000, 1000, 1000));
+	game.phys = new PhysicsEngine(Vec3(-1000, -1000, -1000),
+			Vec3(1000, 1000, 1000));
 
 	// Player initializations
-	player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 2.5, 1);
-	phys->add(player);
+	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 2.5,
+			10);
+	game.phys->add(game.player);
+
+	// Other objects
+	Drone* drone = new Drone(Vec3(-5, 5, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
+
+	game.phys->add(drone);
 
 }
 
@@ -87,8 +95,14 @@ void cleanup() {
 	/////////////////////////////////////////////////////////////
 	/// TODO: Put your teardown code here! //////////////////////
 	/////////////////////////////////////////////////////////////
-	delete phys;
-	delete player;
+
+	set<Object*>::iterator itr;
+	for (itr = game.phys->objects.begin(); itr != game.phys->objects.end();
+			itr++) {
+		Object* obj = *itr;
+		delete obj;
+	}
+	delete game.phys;
 }
 
 const int DIMENSIONS = 3;
@@ -213,7 +227,7 @@ void keys_consumer() {
 
 		// Camera view relative vectors
 		Vec3 vel_f, vel_r, vel_dir;
-		Camera* cam = player->cam;
+		Camera* cam = game.player->cam;
 
 		vel_dir = Vec3(0, 0, 0);
 		if (!special_states[GLUT_KEY_F1]) {
@@ -242,7 +256,7 @@ void keys_consumer() {
 			vel_dir.normalize();
 		}
 
-		player->vel = vel_dir * speed;
+		game.player->vel = vel_dir * speed;
 		//debug_player(player);
 	}
 }
@@ -287,19 +301,6 @@ void motion_callback(int x, int y) {
 	}
 }
 
-void modelChildShip() {
-	glPushMatrix();
-	glutSolidSphere(.5, 20, 20);
-	glTranslatef(0, 0, -.5);
-	glColor3f(0, 1, 0);
-	glutSolidSphere(.3, 20, 20);
-	glTranslatef(0, 0, .5);
-	glScalef(1, 0.2, 1);
-	glColor3f(1, 0, 0);
-	glutSolidCube(1);
-	glPopMatrix();
-}
-
 void draw_sky() {
 	// Draw textured sky hemisphere
 	if (!sky_init) {
@@ -327,11 +328,21 @@ void draw_sky() {
 
 }
 
+void draw_objects() {
+	set<Object*>::iterator itr;
+	for (itr = game.phys->objects.begin(); itr != game.phys->objects.end();
+			itr++) {
+		glPushMatrix();
+		Object* obj = *itr;
+		glTranslatef(obj->pos.x, obj->pos.y, obj->pos.z);
+		obj->draw();
+		glPopMatrix();
+	}
+}
+
 void draw_scene() {
 	glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslatef(0, 5, 10);
-	modelChildShip();
+	draw_objects();
 	glPopMatrix();
 	draw_grid();
 	glPushMatrix();
@@ -429,8 +440,7 @@ void draw_3D() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4,
-		0, 1, 12, 4, &ctrlpoints[0][0][0]);
+	glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
 	glEnable(GL_MAP2_VERTEX_3);
 	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
 
@@ -444,7 +454,7 @@ void draw_3D() {
 	glLoadIdentity();
 
 	// Camera is on top of player
-	Vec3 pos = game.player->pos + Vec3(0,game.player->radius,0);
+	Vec3 pos = game.player->pos + Vec3(0, game.player->radius, 0);
 	Camera* cam = game.player->cam;
 	Vec3 center = pos + cam->view;
 	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z, cam->up.x,
@@ -546,7 +556,7 @@ void update_state() {
 	if (current_window == cam_window) {
 		unsigned long dt = curr_time - prev_phys_time;
 		prev_phys_time = curr_time;
-		phys->advance_state(dt);
+		game.phys->advance_state(dt);
 	}
 }
 

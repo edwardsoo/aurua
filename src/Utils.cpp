@@ -28,8 +28,8 @@ void debug_camera(Camera* cam) {
 }
 
 // debug Vec3
-void debug_vec3(Vec3 *vec) {
-	printf("Vec3: x=%f y=%f z=%f\n", vec->x, vec->y, vec->z);
+void debug_vec3(Vec3 vec) {
+	printf("Vec3: x=%f y=%f z=%f\n", vec.x, vec.y, vec.z);
 }
 
 // debug Player

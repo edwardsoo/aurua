@@ -15,6 +15,7 @@ public:
 	Object(Vec3, Vec3, Vec3, float, float);
 	virtual ~Object();
 	bool collide(Object*);
+	virtual void draw();
 	Vec3 pos;
 	Vec3 vel;
 	Vec3 acc;

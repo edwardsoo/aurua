@@ -18,17 +18,16 @@
 using std::vector;
 using std::set;
 
-
 class Octree {
 
 public:
 
-	static const float MIN_TREE_VOLUME = 125000;
-	static const float MIN_TREE_AREA = 2500;
+	static const float MIN_TREE_VOLUME = 1000000000;
 	Octree(Bound, bool);
 	virtual ~Octree();
 	void add(Object* obj);
 	void remove(Object* obj);
+	int size();
 	void get_object_pairs(vector<ObjectPair> &pairs);
 
 private:
