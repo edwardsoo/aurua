@@ -66,7 +66,7 @@ namespace Terrain
 
 	void init_terrain()
 	{
-		int res = 50;
+		int res = 100;
 		terrain = generate_terrain(res);
 		indices = wind(res, res);
 		normals = generate_normals(res);
@@ -149,11 +149,11 @@ namespace Terrain
 
 				if (is_edge_x && is_edge_y)
 				{
-					max_height = 60;
+					max_height = 30;
 				}
 				else if (is_edge_x || is_edge_y)
 				{
-					max_height = 30;
+					max_height = 10;
 				}
 				else
 				{
@@ -182,6 +182,7 @@ namespace Terrain
 		Vec3 n;
 
 		int upIndex = 0;
+		GLfloat n1, n2, n3;
 
 		for (y = 0; y < res - 1; y++)
 		{
@@ -202,25 +203,36 @@ namespace Terrain
 
 				n = normal(current, right, up);
 
-				normals[currIndex] = n[0];
-				normals[currIndex + 1] = n[1];
-				normals[currIndex + 2] = n[2];
+				n1 = n[0];
+				n2 = n[1];
+				n3 = n[2];
+				normals[currIndex] = n1;
+				normals[currIndex + 1] = n2;
+				normals[currIndex + 2] = n3;
 				currIndex += 3;
 			}
 
 			//What do do at the edge? Leave them undefined for now
-			normals[currIndex] = 0;
-			normals[currIndex + 1] = 0;
-			normals[currIndex + 2] = 0;
+			normals[currIndex] = n1;
+			normals[currIndex + 1] = n2;
+			normals[currIndex + 2] = n3;
 			currIndex += 3;
 		}
 
+		//top edge
 		for (x = 0; x < res; x++)
 		{
 			//What do do at the edge? Leave them undefined for now
-			normals[currIndex] = 0;
-			normals[currIndex + 1] = 0;
-			normals[currIndex + 2] = 0;
+
+			//Actually down index
+			upIndex = currIndex - res * 3;
+			n1 = normals[upIndex];
+			n2 = normals[upIndex + 1];
+			n3 = normals[upIndex + 2];
+
+			normals[currIndex] = n1;
+			normals[currIndex + 1] = n2;
+			normals[currIndex + 2] = n3;
 			currIndex += 3;
 		}
 
@@ -350,6 +362,7 @@ namespace Terrain
 
 		Vec3 norm = vn1.cross(vn2);
 		norm.normalize();
+		norm.positive();
 		return norm;
 	}
 

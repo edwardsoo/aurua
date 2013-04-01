@@ -121,6 +121,11 @@ public:
 		z /= l;
 	}
 
+	void positive() {
+		x = fabs(x);
+		y = fabs(y);
+		z = fabs(z);
+	}
 	// access to individual elements
 	double& operator[] (int i) {
 		switch (i)
