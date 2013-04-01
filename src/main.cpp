@@ -218,6 +218,11 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 
 void player_move(Vec3 mov_dir) {
 	double max_speed = WALK_SPEED;
+	// No movement input, "brake" to stop sliding
+	if (mov_dir == Vec3(0, 0, 0)) {
+		game.player->acc = game.player->vel * -SLOW;
+		return;
+	}
 #if _WIN32
 	// return states of the left shift key
 	if (GetKeyState(VK_LSHIFT) & 0x80) {
@@ -459,8 +464,8 @@ void draw_3D() {
 
 	//This is for Bezier surface
 	/*glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
-	glEnable(GL_MAP2_VERTEX_3);
-	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);*/
+	 glEnable(GL_MAP2_VERTEX_3);
+	 glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);*/
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
