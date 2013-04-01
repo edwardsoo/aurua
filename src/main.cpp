@@ -88,6 +88,7 @@ void init() {
 
 	game.phys->add(drone);
 
+	Terrain::init_terrain();
 }
 
 // free any allocated objects and return
@@ -348,7 +349,7 @@ void draw_scene() {
 	glPushMatrix();
 	draw_sky();
 	glPopMatrix();
-	draw_terrain();
+	Terrain::draw_terrain();
 
 }
 
@@ -440,9 +441,10 @@ void draw_3D() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
+	//This is for Bezier surface
+	/*glMap2f(GL_MAP2_VERTEX_3, 0, 1, 3, 4, 0, 1, 12, 4, &ctrlpoints[0][0][0]);
 	glEnable(GL_MAP2_VERTEX_3);
-	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);
+	glMapGrid2f(20, 0.0, 1.0, 20, 0.0, 1.0);*/
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

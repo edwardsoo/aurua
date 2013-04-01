@@ -10,11 +10,16 @@
 
 #include<GL/gl.h>
 
-extern GLfloat ctrlpoints[4][4][3];
+namespace Terrain
+{
 
-void generate_terrain();
-extern void draw_terrain();
+	extern GLfloat ctrlpoints[4][4][3];
 
-short* windLines(int totalX, int totalY);
+	void init_terrain();
+	void generate_terrain();
+	extern void draw_terrain();
 
+	short* windLines(int totalX, int totalY);
+
+}
 #endif /* TERRAIN_H_ */
