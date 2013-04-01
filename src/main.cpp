@@ -30,6 +30,7 @@
 #include "Player.h"
 #include "Terrain.h"
 #include "Drone.h"
+#include "Bolt.h"
 
 using namespace std;
 
@@ -224,7 +225,7 @@ void player_move(Vec3 mov_dir) {
 	double max_speed = WALK_SPEED;
 	// No movement input, "brake" to stop sliding
 	if (mov_dir == Vec3(0, 0, 0)) {
-		game.player->acc = game.player->vel * -SLOW;
+		game.player->acc += game.player->vel * -SLOW;
 		return;
 	}
 #if _WIN32
@@ -244,7 +245,7 @@ void player_move(Vec3 mov_dir) {
 		dir_vel_len = 1;
 	}
 	double acc_mod = 4 - (mov_dir.dot(game.player->vel) / dir_vel_len + 2);
-	game.player->acc = mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
+	game.player->acc += mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
 	//debug_player(player);
 }
 
@@ -289,9 +290,21 @@ void keys_consumer() {
 
 void mouse_callback(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		printf("left mouse down\n");
-		fflush(stdout);
-
+		Vec3 cam_f, cam_r, cam_u, aim_dir, blt_ori;
+		Camera* cam = game.player->cam;
+		cam_f = Vec3(cam->view.x, 0, cam->view.z);
+		cam_r = cam_f.cross(cam->up);
+		cam_u = cam_r.cross(cam_f);
+		cam_r.normalize();
+		blt_ori = game.player->pos + cam_r + cam_u;
+		if (game.player->aiming) {
+			aim_dir = game.player->aim - blt_ori;
+		} else {
+			aim_dir = game.player->get_eye() + cam->view * AIM_DIST - blt_ori;
+		}
+		aim_dir.normalize();
+		Bolt *bolt = new Bolt(blt_ori, aim_dir * BOLT_SPEED, Vec3(0, 0, 0));
+		game.phys->add(bolt);
 	}
 }
 
@@ -481,7 +494,7 @@ void draw_3D() {
 	glLoadIdentity();
 
 	// Camera is on top of player
-	Vec3 pos = game.player->pos + Vec3(0, game.player->radius, 0);
+	Vec3 pos = game.player->get_eye();
 	Camera* cam = game.player->cam;
 	Vec3 center = pos + cam->view;
 	gluLookAt(pos.x, pos.y, pos.z, center.x, center.y, center.z, cam->up.x,

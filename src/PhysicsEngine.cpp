@@ -73,9 +73,20 @@ void PhysicsEngine::apply_global(float dt_ms) {
 	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
 			itr++) {
 		Object* obj = *itr;
+		if (obj->mass > 0) {
+			// Apply shitty physics friction/air drag
+			obj->vel *= pow(1 - FRICTION, dt_sec);
 
-		// Apply shitty physics friction
-		obj->vel *= pow(1 - FRICTION, dt_sec);
+			/*// Apply gravity
+			 if (obj->mass > 0) {
+			 obj->vel += Vec3(0, GRAVITY*dt_sec, 0);
+			 }
+
+			 // Prevent objects going under ground
+			 if (obj->pos.y - obj->radius < 0) {
+			 obj->pos.y = obj->radius;
+			 }*/
+		}
 	}
 }
 
