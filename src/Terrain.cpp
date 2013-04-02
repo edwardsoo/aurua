@@ -25,6 +25,7 @@ namespace Terrain
 	GLint* indices;
 	GLint* texture_indices;
 	int num_indices;
+	int res = 5;
 
 	const float CORNER_HEIGHT = 30;
 	const float EDGE_HEIGHT = 10;
@@ -32,11 +33,11 @@ namespace Terrain
 
 	void init_terrain()
 	{
-		int res = 100;
 		terrain = generate_terrain(res);
 		indices = wind(res, res);
 		normals = generate_normals(res);
 		texture_indices = create_texture_indices(res);
+		get_height(750, 100);
 		srand(time(NULL));
 		printf(" ");
 	}
@@ -326,6 +327,17 @@ namespace Terrain
 		norm.normalize();
 		norm.positive();
 		return norm;
+	}
+
+	float get_height(float x, float z)
+	{
+		float x_prop = x / AREA_LIMIT;
+		long x_res_pos = integer_part(x_prop * res);
+
+		float z_prop = z / AREA_LIMIT;
+		long z_res_pos = integer_part(z_prop * res);
+
+		return indices[(x_res_pos + z_res_pos * res) * 3 + 1];
 	}
 
 }

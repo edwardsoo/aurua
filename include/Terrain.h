@@ -22,6 +22,8 @@ namespace Terrain
 	GLint* create_texture_indices(int res);
 	void draw_terrain();
 
+	float get_height(float x, float z);
+
 	int* wind_lines(int totalX, int totalY);
 	int* wind(int totalX, int totalY);
 

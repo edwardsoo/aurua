@@ -9,6 +9,7 @@
 #endif
 
 #include "Game.h"
+#include "math.h"
 
 // debug matrix
 void print_matrix(double* m) {
@@ -136,4 +137,12 @@ void draw_grid() {
 		glVertex3f(i, 0, AREA_LIMIT);
 		glEnd();
 	}
+}
+
+double fractional_part(double d) {
+	return fmod(d, 1);
+}
+
+double integer_part(double d) {
+	return d - fractional_part(d);
 }
