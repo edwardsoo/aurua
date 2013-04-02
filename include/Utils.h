@@ -18,7 +18,7 @@ double fractional_part(double d);
 
 double integer_part(double d);
 
-float interpolate_bilinear
+/*float interpolate_bilinear
 	(
 		float x,
 		float z,
@@ -28,6 +28,19 @@ float interpolate_bilinear
 		float pz_y,
 		float pz_z,
 		float pxz_y
+	);*/
+
+double interpolate_bilinear
+	(
+		double x,
+		double z,
+		Vec3& orig,
+		double px_x,
+		double px_y,
+		double pz_y,
+		double pz_z,
+		double pxz_y,
+		double diff
 	);
 
 #endif /* UTILS_H_ */

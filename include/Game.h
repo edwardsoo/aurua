@@ -13,6 +13,8 @@
 
 const float AREA_LIMIT = 1000;
 
+extern bool is_wireframe;
+
 class Game
 {
 public:

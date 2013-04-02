@@ -7,6 +7,8 @@
 
 #include "Game.h"
 
+bool is_wireframe = false;
+
 Game::Game()
 {
 	// Collision stuff

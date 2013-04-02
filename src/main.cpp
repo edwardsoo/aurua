@@ -190,6 +190,10 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 		case 'D':
 			key_states['d'] = true;
 			break;
+		case 'h':
+		case 'H':
+			key_states['h'] = true;
+			break;
 		case 'r':
 		case 'R':
 			game.player->pos = Vec3(5, 5, 5);
@@ -292,6 +296,11 @@ void keys_consumer() {
 			mov_dir += mov_r;
 		} else if (key_states['a']) {
 			mov_dir -= mov_r;
+		}
+
+		if (key_states['h'])
+		{
+			Terrain::is_request_print = true;
 		}
 		if (mov_dir != Vec3(0, 0, 0)) {
 			mov_dir.normalize();
@@ -450,7 +459,7 @@ void print_life() {
 	glMatrixMode(GL_MODELVIEW);
 
 	char string[4];
-	snprintf(string, 4, "%d", 100);
+	snprintf(string, 32, "%d %f", 100, game.player->pos.y);
 	glColor3f(1, 1, 1);
 	glDisable(GL_TEXTURE_2D);
 	double tmp[4];
@@ -487,8 +496,10 @@ void draw_3D() {
 
 	if (!special_states[GLUT_KEY_F2]) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		is_wireframe = false;
 	} else {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		is_wireframe = true;
 	}
 
 	//This is for Bezier surface

@@ -28,20 +28,24 @@ namespace Terrain
 	GLint* texture_indices;
 	int num_indices;
 
+	bool is_request_print = false;
+
 	/**
 	 * Resolution of terrain.
 	 * res * res = total number of squares
 	 */
 	int res = 100;
+	double diff = 2 * AREA_LIMIT / res;
+	double diff_recp = 1 / (diff * diff);
 
 	enum Map
 	{
 		MAP_STANDARD,
-		MAP_PERLIN_NOISE,
+		MAP_DRAGONBALL,
 		MAP_COSINE
 	};
 
-	Map map = MAP_PERLIN_NOISE;
+	Map map = MAP_STANDARD;
 
 	const float CORNER_HEIGHT = 30;
 	const float EDGE_HEIGHT = 10;
@@ -51,10 +55,17 @@ namespace Terrain
 	{
 		PerlinNoise::generate_p();
 		terrain = generate_terrain(res);
-		indices = wind(res, res);
+		if (is_wireframe)
+		{
+			indices = wind_lines(res, res);
+		}
+		else
+		{
+			indices = wind(res, res);
+		}
 		normals = generate_normals(res);
 		texture_indices = generate_tex_coords(res);
-		get_height(750, 100);
+		//get_height(750, 100);
 
 		srand(time(NULL));
 		printf(" ");
@@ -65,16 +76,26 @@ namespace Terrain
 		glColor3f(.94,.89,.69);
 		float limit = 3;
 		glPushMatrix();
-			glEnable(GL_TEXTURE_2D);
+
 			glEnableClientState( GL_VERTEX_ARRAY );	 // Enable Vertex Arrays
-			glEnableClientState( GL_NORMAL_ARRAY );
-			glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+
 			glVertexPointer(3, GL_FLOAT, 0, terrain);
-			glNormalPointer(GL_FLOAT, 0, normals);
-			glBindTexture(GL_TEXTURE_2D, Textures::textures[Textures::SAND]);
-			glTexCoordPointer(2, GL_INT, 0, texture_indices);
-			glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
-			glDisable(GL_TEXTURE_2D);
+			if (is_wireframe)
+			{
+				glDrawElements(GL_LINES, num_indices, GL_UNSIGNED_INT, indices);
+			}
+			else
+			{
+				glEnable(GL_TEXTURE_2D);
+				glEnableClientState( GL_NORMAL_ARRAY );
+				glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+				glNormalPointer(GL_FLOAT, 0, normals);
+				glBindTexture(GL_TEXTURE_2D, Textures::textures[Textures::SAND]);
+				glTexCoordPointer(2, GL_INT, 0, texture_indices);
+				glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
+				glDisable(GL_TEXTURE_2D);
+			}
+
 		glPopMatrix();
 	}
 
@@ -140,8 +161,8 @@ namespace Terrain
 				case MAP_STANDARD:
 					y = rand() % max_height;
 					break;
-				case MAP_PERLIN_NOISE:
-					y = PerlinNoise::noise(tempRes, tempResY, tempRes - tempResY) * max_height * 100;
+				case MAP_DRAGONBALL:
+					y = fabs(PerlinNoise::noise(tempRes, tempResY, tempRes - tempResY)) * max_height * 100;
 					break;
 				case MAP_COSINE:
 					y = abs(sin(temp) * cos(tempY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
@@ -379,42 +400,55 @@ namespace Terrain
 		return norm;
 	}
 
-	float get_height(float x, float z)
+	double get_height(double x, double z)
 	{
 		int area_limit_2 = (2 * AREA_LIMIT);
-		float x_prop = (x + AREA_LIMIT) / area_limit_2;
-		float x_prop_res = x_prop * res;
+		double x_prop = (x + AREA_LIMIT) / area_limit_2;
+		double x_prop_res = x_prop * res;
 
 		// Which terrain coordinate x?
 		long terrain_x = integer_part(x_prop_res);
 
-		float z_prop = (z + AREA_LIMIT) / area_limit_2;
-		float z_prop_res = z_prop * res;
+		double z_prop = (z + AREA_LIMIT) / area_limit_2;
+		double z_prop_res = z_prop * res;
 
-		float terrain_z = integer_part(z_prop_res);
+		double terrain_z = integer_part(z_prop_res);
 
 		int res_m1 = res - 1;
 		if (terrain_x < res_m1 && terrain_z < res_m1)
 		{
 			int index = (terrain_x + terrain_z * res) * 3;
-			float orig_x = terrain[index];
-			float orig_y = terrain[index + 1];
-			float orig_z = terrain[index + 2];
+			double orig_x = terrain[index];
+			double orig_y = terrain[index + 1];
+			double orig_z = terrain[index + 2];
 
-			float px_x = terrain[index + 3];
-			float px_y = terrain[index + 4];
+			double px_x = terrain[index + 3];
+			double px_y = terrain[index + 4];
 
 			index = (terrain_x + (terrain_z + 1) * res) * 3;
-			float pz_y = terrain[index + 1];
-			float pz_z = terrain[index + 2];
+			double pz_y = terrain[index + 1];
+			double pz_z = terrain[index + 2];
 
 			index = ((terrain_x + 1) + (terrain_z + 1) * res) * 3;
-			float pxz_y = terrain[index + 1];
+			double pxz_y = terrain[index + 1];
 
-			float height = 0;
+			double height = 0;
+
+			if (is_request_print)
+			{
+				printf("At %f,%f, o: %f x: %f z: %f xz: %f \n", x, z, orig_y, px_y, pz_y, pxz_y);
+				fflush(stdout);
+				is_request_print = false;
+			}
 
 			Vec3 origin = Vec3(orig_x, orig_y, orig_z);
-			height = interpolate_bilinear(x, z, origin, px_x, px_y, pz_y, pz_z, pxz_y);
+			height = interpolate_bilinear(x, z, origin, px_x, px_y, pz_y, pz_z, pxz_y, diff_recp);
+
+			if (x > px_x || z > pz_z)
+			{
+				printf("Fail \n");
+				fflush(stdout);
+			}
 			return height;
 		}
 		return 0;

@@ -16,13 +16,16 @@ namespace Terrain
 
 	extern GLfloat ctrlpoints[4][4][3];
 
+	extern bool is_request_print;
+
 	void init_terrain();
 	GLfloat* generate_normals(int res);
 	GLfloat* generate_terrain(int res);
 	GLint* generate_tex_coords(int res);
 	void draw_terrain();
 
-	float get_height(float x, float z);
+	//float get_height(float x, float z);
+	double get_height(double x, double z);
 
 	int* wind_lines(int totalX, int totalY);
 	int* wind(int totalX, int totalY);
