@@ -21,7 +21,7 @@
 
 #include "main.h"
 #include "ViewingMode.h"
-#include "Global.h"
+#include "Textures.h"
 #include "Camera.h"
 #include "Vec3.h"
 #include "Utils.h"
@@ -33,6 +33,7 @@
 #include "Bolt.h"
 
 using namespace std;
+using namespace Textures;
 
 GLfloat position0[] = { 10.0, 1.0, 10.0, 0.0 };
 GLfloat position1[] = { -10.0, 2.0, -10.0, 0.0 };
@@ -635,6 +636,8 @@ void create_textures() {
 	SKY_Q3);
 	raw_texture_load(textures, "textures/sky_q4.raw", 512, 512,
 	SKY_Q4);
+	raw_texture_load(textures, "textures/sand.raw", 512, 512,
+		SAND);
 }
 
 //////////////////////////////////////////////////////////////////

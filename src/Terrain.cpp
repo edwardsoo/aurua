@@ -16,12 +16,14 @@
 #include "Game.h"
 #include "stdlib.h"
 #include "time.h"
+#include "textures.h"
 
 namespace Terrain
 {
 	GLfloat* terrain;
 	GLfloat* normals;
 	GLint* indices;
+	GLint* texture_indices;
 	int num_indices;
 
 	const float CORNER_HEIGHT = 30;
@@ -34,6 +36,7 @@ namespace Terrain
 		terrain = generate_terrain(res);
 		indices = wind(res, res);
 		normals = generate_normals(res);
+		texture_indices = create_texture_indices(res);
 		srand(time(NULL));
 		printf(" ");
 	}
@@ -43,11 +46,16 @@ namespace Terrain
 		glColor3f(.94,.89,.69);
 		float limit = 3;
 		glPushMatrix();
+			glEnable(GL_TEXTURE_2D);
 			glEnableClientState( GL_VERTEX_ARRAY );	 // Enable Vertex Arrays
 			glEnableClientState( GL_NORMAL_ARRAY );
+			glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 			glVertexPointer(3, GL_FLOAT, 0, terrain);
 			glNormalPointer(GL_FLOAT, 0, normals);
+			glBindTexture(GL_TEXTURE_2D, Textures::textures[Textures::SAND]);
+			glTexCoordPointer(2, GL_INT, 0, texture_indices);
 			glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
+			glDisable(GL_TEXTURE_2D);
 		glPopMatrix();
 	}
 
@@ -172,6 +180,25 @@ namespace Terrain
 		}
 
 		return normals;
+	}
+
+	GLint* create_texture_indices(int res)
+	{
+		GLint* tex_ind = new int[2 * res * res];
+		int x, y;
+		int currIndex = 0;
+
+		for (y = 0; y < res; y++)
+		{
+			for (x = 0; x < res; x++)
+			{
+				tex_ind[currIndex] = x;
+				tex_ind[currIndex + 1] = y;
+				currIndex += 2;
+			}
+		}
+
+		return tex_ind;
 	}
 
 	/**

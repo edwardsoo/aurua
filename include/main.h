@@ -3,17 +3,6 @@
 
 #include "Game.h"
 
-// Texture ID
-#define TITLE 0
-#define SKY_Q1 TITLE+1
-#define SKY_Q2 SKY_Q1+1
-#define SKY_Q3 SKY_Q2+1
-#define SKY_Q4 SKY_Q3+1
-#define NUM_TEXTURES SKY_Q4+1
-
-// Display list ID
-#define SKY_LIST 1
-
 bool sky_init = false;
 
 //The number of milliseconds to which the timer is set
@@ -34,8 +23,7 @@ unsigned long prev_phys_time;
 int frame_passed = 0;
 char win_title[32] = { 0 };
 
-// Textures variables
-GLuint textures[NUM_TEXTURES];
+
 
 // display width and height
 int disp_width = 800, disp_height = 640;
