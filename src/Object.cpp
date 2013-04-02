@@ -13,6 +13,7 @@ Object::Object() {
 	acc = Vec3();
 	radius = 0;
 	mass = 0;
+	is_on_ground = true;
 }
 
 Object::Object(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass) {
@@ -21,6 +22,7 @@ Object::Object(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass) {
 	acc = _acc;
 	radius = _radius;
 	mass = _mass;
+	is_on_ground = true;
 }
 
 Object::~Object() {

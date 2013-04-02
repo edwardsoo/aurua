@@ -35,7 +35,7 @@
 using namespace std;
 using namespace Textures;
 
-GLfloat position0[] = { 10.0, 1.0, 10.0, 0.0 };
+GLfloat position0[] = { 10.0, 2.0, 10.0, 0.0 };
 GLfloat position1[] = { -10.0, 2.0, -10.0, 0.0 };
 
 int sky_stacks = 16;
@@ -66,7 +66,7 @@ void gl_init() {
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 
-	GLfloat ambient2[] = { 0.1, 0.1, 0.1, 1.0 };
+	GLfloat ambient2[] = { 0.2, 0.2, 0.2, 1.0 };
 	GLfloat diffuse2[] = { 0.8, 0.8, 0.8, 1.0 };
 	GLfloat specular2[] = { 0.5, 0.5, 0.5, 1.0 };
 
@@ -626,20 +626,6 @@ void idle(int value) {
 
 }
 
-void create_textures() {
-	raw_texture_load(textures, "textures/aurua.raw", 1772, 1772, TITLE);
-	raw_texture_load(textures, "textures/sky_q1.raw", 512, 512,
-	SKY_Q1);
-	raw_texture_load(textures, "textures/sky_q2.raw", 512, 512,
-	SKY_Q2);
-	raw_texture_load(textures, "textures/sky_q3.raw", 512, 512,
-	SKY_Q3);
-	raw_texture_load(textures, "textures/sky_q4.raw", 512, 512,
-	SKY_Q4);
-	raw_texture_load(textures, "textures/sand.raw", 512, 512,
-		SAND);
-}
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Program Entry Point //////////////////////////////////////////
@@ -692,7 +678,7 @@ int main(int argc, char **argv) {
 	game_init();
 
 	// load image and create textures
-	create_textures();
+	Textures::create_textures();
 
 	glutTimerFunc(TIMER_MS, idle, 0);
 	//glutIdleFunc(idle);

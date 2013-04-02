@@ -18,4 +18,16 @@ double fractional_part(double d);
 
 double integer_part(double d);
 
+float interpolate_bilinear
+	(
+		float x,
+		float z,
+		Vec3& orig,
+		float px_x,
+		float px_y,
+		float pz_y,
+		float pz_z,
+		float pxz_y
+	);
+
 #endif /* UTILS_H_ */

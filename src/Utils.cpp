@@ -146,3 +146,30 @@ double fractional_part(double d) {
 double integer_part(double d) {
 	return d - fractional_part(d);
 }
+
+float interpolate_bilinear
+		(
+			float x,
+			float z,
+			Vec3& orig,
+			float px_x,
+			float px_y,
+			float pz_y,
+			float pz_z,
+			float pxz_y
+		)
+{
+	float f =
+		(	1
+			/
+			((px_x - orig.x) * (pz_z - orig.z))
+		)
+		*
+		(
+		orig.y * (px_x - x) * (pz_z - z)
+	+	px_y * (x - orig.x) * (pz_z - z)
+	+	pz_y * (px_x - x) * (z - orig.z)
+	+	pxz_y * (x - orig.x) * (z - orig.z)
+		);
+	return f;
+}

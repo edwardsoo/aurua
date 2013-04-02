@@ -21,6 +21,7 @@ public:
 	Vec3 acc;
 	float radius;
 	float mass;
+	bool is_on_ground;
 };
 
 struct ObjectPair {

@@ -25,6 +25,11 @@ namespace Terrain
 	GLint* indices;
 	GLint* texture_indices;
 	int num_indices;
+
+	/**
+	 * Resolution of terrain.
+	 * res * res = total number of squares
+	 */
 	int res = 100;
 
 	const float CORNER_HEIGHT = 30;
@@ -36,7 +41,7 @@ namespace Terrain
 		terrain = generate_terrain(res);
 		indices = wind(res, res);
 		normals = generate_normals(res);
-		texture_indices = create_texture_indices(res);
+		texture_indices = generate_tex_coords(res);
 		get_height(750, 100);
 		srand(time(NULL));
 		printf(" ");
@@ -183,7 +188,10 @@ namespace Terrain
 		return normals;
 	}
 
-	GLint* create_texture_indices(int res)
+	/**
+	 * Generate texture coordinates
+	 */
+	GLint* generate_tex_coords(int res)
 	{
 		GLint* tex_ind = new int[2 * res * res];
 		int x, y;
@@ -244,6 +252,9 @@ namespace Terrain
 		return indices;
 	}
 
+	/**
+	 * Generate the indices needed for a triangle strip
+	 */
 	int* wind(int totalX, int totalY) {
 		// How many times to wind vertically
 		int wind_vert = totalX * (totalY - 1);
@@ -331,47 +342,45 @@ namespace Terrain
 
 	float get_height(float x, float z)
 	{
-		float x_prop = x / AREA_LIMIT;
+		int area_limit_2 = (2 * AREA_LIMIT);
+		float x_prop = (x + AREA_LIMIT) / area_limit_2;
 		float x_prop_res = x_prop * res;
 
-		float x_res_prop = fractional_part(x_prop_res);
-		long x_res_pos = x_prop_res - x_res_prop;
+		// Which terrain coordinate x?
+		long terrain_x = integer_part(x_prop_res);
 
-		float z_prop = z / AREA_LIMIT;
+		float z_prop = (z + AREA_LIMIT) / area_limit_2;
 		float z_prop_res = z_prop * res;
 
-		float z_res_prop = fractional_part(z_prop_res);
-		long z_res_pos = z_prop_res - z_res_prop;
+		float terrain_z = integer_part(z_prop_res);
 
 		int res_m1 = res - 1;
-		if (x_res_pos < res_m1 && z_res_pos < res_m1)
+		if (terrain_x < res_m1 && terrain_z < res_m1)
 		{
-			int index = (x_res_pos + z_res_pos * res) * 3;
-			float y_res = terrain[index + 1];
-			float y_p1y = terrain[(x_res_pos + 1 + z_res_pos * res) * 3 + 1];
-			float y_p1x = terrain[index + 4];
-			float y_p1xy = terrain[((x_res_pos + 1) + (z_res_pos + 1) * res) * 3 + 1];
+			int index = (terrain_x + terrain_z * res) * 3;
+			float orig_x = terrain[index];
+			float orig_y = terrain[index + 1];
+			float orig_z = terrain[index + 2];
 
-			float weight_p1y = z_res_prop - x_res_prop;
-			float weight_p1x = -weight_p1y;
-			float weight_p1xy = sqrt(weight_p1x * weight_p1x + weight_p1y * weight_p1y);
+			float px_x = terrain[index + 3];
+			float px_y = terrain[index + 4];
+
+			index = (terrain_x + (terrain_z + 1) * res) * 3;
+			float pz_y = terrain[index + 1];
+			float pz_z = terrain[index + 2];
+
+			index = ((terrain_x + 1) + (terrain_z + 1) * res) * 3;
+			float pxz_y = terrain[index + 1];
 
 			float height = 0;
 
-			if (weight_p1y > 0)
-			{
-				height += y_p1y * weight_p1y;
-			}
-			if (weight_p1x > 0)
-			{
-				height += y_p1x * weight_p1x;
-			}
-			height += weight_p1xy * y_p1xy;
-			height += (1 - weight_p1xy) * y_res;
+			Vec3 origin = Vec3(orig_x, orig_y, orig_z);
+			height = interpolate_bilinear(x, z, origin, px_x, px_y, pz_y, pz_z, pxz_y);
 			return height;
 		}
-		//return terrain[(x_res_pos + z_res_pos * res) * 3 + 1];
 		return 0;
 	}
+
+
 
 }

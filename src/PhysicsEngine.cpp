@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "PhysicsEngine.h"
+#include "Terrain.h"
 
 static const double FRICTION = 0.8;
 static const double NORMAL_FORCE = 0.5;
@@ -47,6 +48,11 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 
 		// Move object
 		obj->pos += obj->vel * dt_sec;
+
+		if (obj->is_on_ground)
+		{
+			obj->pos.y = Terrain::get_height(obj->pos.x, obj->pos.z);
+		}
 
 		octree->remove(obj);
 		octree->add(obj);

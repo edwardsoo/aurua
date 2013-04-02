@@ -58,7 +58,7 @@ namespace Textures
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
 				GL_LINEAR_MIPMAP_NEAREST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 		// build our texture mipmaps
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE,
@@ -68,5 +68,20 @@ namespace Textures
 		free(data);
 
 		return 1;
+	}
+
+	void create_textures()
+	{
+		raw_texture_load(textures, "textures/aurua.raw", 1772, 1772, TITLE);
+		raw_texture_load(textures, "textures/sky_q1.raw", 512, 512,
+		SKY_Q1);
+		raw_texture_load(textures, "textures/sky_q2.raw", 512, 512,
+		SKY_Q2);
+		raw_texture_load(textures, "textures/sky_q3.raw", 512, 512,
+		SKY_Q3);
+		raw_texture_load(textures, "textures/sky_q4.raw", 512, 512,
+		SKY_Q4);
+		raw_texture_load(textures, "textures/sand.raw", 512, 512,
+			SAND);
 	}
 }

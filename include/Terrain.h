@@ -19,7 +19,7 @@ namespace Terrain
 	void init_terrain();
 	GLfloat* generate_normals(int res);
 	GLfloat* generate_terrain(int res);
-	GLint* create_texture_indices(int res);
+	GLint* generate_tex_coords(int res);
 	void draw_terrain();
 
 	float get_height(float x, float z);
