@@ -25,7 +25,7 @@ namespace Terrain
 	GLint* indices;
 	GLint* texture_indices;
 	int num_indices;
-	int res = 5;
+	int res = 100;
 
 	const float CORNER_HEIGHT = 30;
 	const float EDGE_HEIGHT = 10;
@@ -332,12 +332,46 @@ namespace Terrain
 	float get_height(float x, float z)
 	{
 		float x_prop = x / AREA_LIMIT;
-		long x_res_pos = integer_part(x_prop * res);
+		float x_prop_res = x_prop * res;
+
+		float x_res_prop = fractional_part(x_prop_res);
+		long x_res_pos = x_prop_res - x_res_prop;
 
 		float z_prop = z / AREA_LIMIT;
-		long z_res_pos = integer_part(z_prop * res);
+		float z_prop_res = z_prop * res;
 
-		return indices[(x_res_pos + z_res_pos * res) * 3 + 1];
+		float z_res_prop = fractional_part(z_prop_res);
+		long z_res_pos = z_prop_res - z_res_prop;
+
+		int res_m1 = res - 1;
+		if (x_res_pos < res_m1 && z_res_pos < res_m1)
+		{
+			int index = (x_res_pos + z_res_pos * res) * 3;
+			float y_res = terrain[index + 1];
+			float y_p1y = terrain[(x_res_pos + 1 + z_res_pos * res) * 3 + 1];
+			float y_p1x = terrain[index + 4];
+			float y_p1xy = terrain[((x_res_pos + 1) + (z_res_pos + 1) * res) * 3 + 1];
+
+			float weight_p1y = z_res_prop - x_res_prop;
+			float weight_p1x = -weight_p1y;
+			float weight_p1xy = sqrt(weight_p1x * weight_p1x + weight_p1y * weight_p1y);
+
+			float height = 0;
+
+			if (weight_p1y > 0)
+			{
+				height += y_p1y * weight_p1y;
+			}
+			if (weight_p1x > 0)
+			{
+				height += y_p1x * weight_p1x;
+			}
+			height += weight_p1xy * y_p1xy;
+			height += (1 - weight_p1xy) * y_res;
+			return height;
+		}
+		//return terrain[(x_res_pos + z_res_pos * res) * 3 + 1];
+		return 0;
 	}
 
 }
