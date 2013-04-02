@@ -18,6 +18,7 @@
 #include "time.h"
 #include "textures.h"
 #include "PerlinNoise.h"
+#include "math.h"
 
 namespace Terrain
 {
@@ -33,9 +34,18 @@ namespace Terrain
 	 */
 	int res = 100;
 
+	enum Map
+	{
+		MAP_STANDARD,
+		MAP_PERLIN_NOISE,
+		MAP_COSINE
+	};
+
+	Map map = MAP_PERLIN_NOISE;
+
 	const float CORNER_HEIGHT = 30;
-	const float EDGE_HEIGHT = 20;
-	const float NORMAL_HEIGHT = 10;
+	const float EDGE_HEIGHT = 10;
+	const float NORMAL_HEIGHT = 5;
 
 	void init_terrain()
 	{
@@ -95,6 +105,8 @@ namespace Terrain
 		double tempRes;
 		double tempResY;
 
+		float y;
+
 		for (z = 0; z < res; z++)
 		{
 			is_edge_y = (z < lower_edge || z > upper_edge);
@@ -117,18 +129,28 @@ namespace Terrain
 					max_height = NORMAL_HEIGHT;
 				}
 				vertices[currIndex + 0] = xStart + xStep * x;
-				//vertices[currIndex + 1] = rand() % max_height;
+
 				temp = (double) 2 * x - res;
 				tempY = (double) 2 * z - res;
-				//double d = PerlinNoise::noise(temp, tempY, temp - tempY);
+				tempRes = temp / res * M_PI;
+				tempResY = tempY / res * M_PI;
 
-				//vertices[currIndex + 1] = rand() % max_height;
+				switch (map)
+				{
+				case MAP_STANDARD:
+					y = rand() % max_height;
+					break;
+				case MAP_PERLIN_NOISE:
+					y = PerlinNoise::noise(tempRes, tempResY, tempRes - tempResY) * max_height * 100;
+					break;
+				case MAP_COSINE:
+					y = abs(sin(temp) * cos(tempY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
 
-				tempRes = temp / res * 3.14159265;
-				tempResY = tempY / res * 3.14159265;
-				vertices[currIndex + 1] = abs(sin(temp) * cos(tempY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
+					break;
+				}
+
+				vertices[currIndex + 1] = y;
 				vertices[currIndex + 2] = yStart + yStep * z;
-
 				currIndex += 3;
 			}
 		}

@@ -41,7 +41,8 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 		Vec3 old_pos = obj->pos;
 
 		// Accelerate
-		if (obj->acc.length() != 0) {
+		if (obj->acc.length() != 0)
+		{
 			obj->vel += obj->acc * dt_sec;
 			obj->acc = Vec3(0, 0, 0);
 		}
