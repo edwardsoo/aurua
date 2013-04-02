@@ -84,6 +84,10 @@ void Octree::remove(Object* obj) {
 				if (children[z][y][x] != NULL
 						&& child_bounds[z][y][x].contains(obj)) {
 					children[z][y][x]->remove(obj);
+					if (children[z][y][x]->size() == 0) {
+						delete children[z][y][x];
+						children[z][y][x] = NULL;
+					}
 				}
 			}
 		}
