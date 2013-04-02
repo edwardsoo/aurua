@@ -17,6 +17,7 @@
 #include "stdlib.h"
 #include "time.h"
 #include "textures.h"
+#include "PerlinNoise.h"
 
 namespace Terrain
 {
@@ -33,16 +34,18 @@ namespace Terrain
 	int res = 100;
 
 	const float CORNER_HEIGHT = 30;
-	const float EDGE_HEIGHT = 10;
-	const float NORMAL_HEIGHT = 5;
+	const float EDGE_HEIGHT = 20;
+	const float NORMAL_HEIGHT = 10;
 
 	void init_terrain()
 	{
+		PerlinNoise::generate_p();
 		terrain = generate_terrain(res);
 		indices = wind(res, res);
 		normals = generate_normals(res);
 		texture_indices = generate_tex_coords(res);
 		get_height(750, 100);
+
 		srand(time(NULL));
 		printf(" ");
 	}
@@ -69,7 +72,7 @@ namespace Terrain
 	{
 		GLfloat* vertices = new float[3 * res * res];
 
-		int x, y, z;
+		int x, z;
 		int currIndex = 0;
 
 		float xStart = -AREA_LIMIT;
@@ -87,9 +90,14 @@ namespace Terrain
 		int lower_edge = res * 0.3;
 		int upper_edge = res * 0.7;
 
-		for (y = 0; y < res; y++)
+		double temp;
+		double tempY;
+		double tempRes;
+		double tempResY;
+
+		for (z = 0; z < res; z++)
 		{
-			is_edge_y = (y < lower_edge || y > upper_edge);
+			is_edge_y = (z < lower_edge || z > upper_edge);
 			for (x = 0; x < res; x++)
 			{
 				is_edge_x = (x < lower_edge || x > upper_edge);
@@ -109,8 +117,17 @@ namespace Terrain
 					max_height = NORMAL_HEIGHT;
 				}
 				vertices[currIndex + 0] = xStart + xStep * x;
-				vertices[currIndex + 1] = rand() % max_height;
-				vertices[currIndex + 2] = yStart + yStep * y;
+				//vertices[currIndex + 1] = rand() % max_height;
+				temp = (double) 2 * x - res;
+				tempY = (double) 2 * z - res;
+				//double d = PerlinNoise::noise(temp, tempY, temp - tempY);
+
+				//vertices[currIndex + 1] = rand() % max_height;
+
+				tempRes = temp / res * 3.14159265;
+				tempResY = tempY / res * 3.14159265;
+				vertices[currIndex + 1] = abs(sin(temp) * cos(tempY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
+				vertices[currIndex + 2] = yStart + yStep * z;
 
 				currIndex += 3;
 			}

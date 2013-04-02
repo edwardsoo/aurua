@@ -266,12 +266,17 @@ void keys_consumer() {
 		Camera* cam = game.player->cam;
 
 		mov_dir = Vec3(0, 0, 0);
-		if (!special_states[GLUT_KEY_F1]) {
+		if (!special_states[GLUT_KEY_F1])
+		{
 			// walk mode
 			mov_f = Vec3(cam->view.x, 0, cam->view.z);
-		} else {
+			game.player->is_on_ground = true;
+		}
+		else
+		{
 			// fly mode
 			mov_f = cam->view;
+			game.player->is_on_ground = false;
 		}
 		mov_f.normalize();
 		// for side strafe
