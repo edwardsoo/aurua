@@ -21,6 +21,12 @@ namespace Terrain
 		MAP_BLAND
 	};
 
+	typedef struct
+	{
+		long x;
+		long z;
+	} coords;
+
 	extern Map map;
 
 	extern int res;
@@ -34,6 +40,9 @@ namespace Terrain
 	GLfloat* generate_terrain(int res);
 	GLint* generate_tex_coords(int res);
 	void draw_terrain();
+
+	Vec3 get_normal(double x, double z);
+	coords get_terrain_coords(double x, double z);
 
 	//float get_height(float x, float z);
 	double get_height(double x, double z);

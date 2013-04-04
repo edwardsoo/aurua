@@ -313,6 +313,9 @@ void keys_consumer() {
 		if (key_states['h'])
 		{
 			Terrain::is_request_print = true;
+			Vec3 v = Terrain::get_normal(game.player->pos.x, game.player->pos.z);
+			v.print();
+
 		}
 		if (mov_dir != Vec3(0, 0, 0)) {
 			mov_dir.normalize();

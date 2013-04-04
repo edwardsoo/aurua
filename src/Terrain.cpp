@@ -47,6 +47,8 @@ namespace Terrain
 	const float EDGE_HEIGHT = 10;
 	const float NORMAL_HEIGHT = 5;
 
+	const coords INVALID_COORD = { -1, -1 };
+
 	void init_terrain()
 	{
 		diff = 2 * GameParameters::area_limit / res;
@@ -398,26 +400,17 @@ namespace Terrain
 
 	double get_height(double x, double z)
 	{
-		if (fabs(x) > GameParameters::area_limit || fabs(z) > GameParameters::area_limit)
+		coords terrain_coords = get_terrain_coords(x, z);
+
+		if (terrain_coords.x < 0)
 		{
 			return 0;
 		}
-		int area_limit_2 = (2 * GameParameters::area_limit);
-		double x_prop = (x + GameParameters::area_limit) / area_limit_2;
-		double x_prop_res = x_prop * res;
-
-		// Which terrain coordinate x?
-		long terrain_x = integer_part(x_prop_res);
-
-		double z_prop = (z + GameParameters::area_limit) / area_limit_2;
-		double z_prop_res = z_prop * res;
-
-		double terrain_z = integer_part(z_prop_res);
 
 		int res_m1 = res - 1;
-		if (terrain_x < res_m1 && terrain_z < res_m1)
+		if (terrain_coords.x < res_m1 && terrain_coords.z < res_m1)
 		{
-			int index = (terrain_x + terrain_z * res) * 3;
+			int index = (terrain_coords.x + terrain_coords.z * res) * 3;
 			double orig_x = terrain[index];
 			double orig_y = terrain[index + 1];
 			double orig_z = terrain[index + 2];
@@ -425,11 +418,11 @@ namespace Terrain
 			double px_x = terrain[index + 3];
 			double px_y = terrain[index + 4];
 
-			index = (terrain_x + (terrain_z + 1) * res) * 3;
+			index = (terrain_coords.x + (terrain_coords.z + 1) * res) * 3;
 			double pz_y = terrain[index + 1];
 			double pz_z = terrain[index + 2];
 
-			index = ((terrain_x + 1) + (terrain_z + 1) * res) * 3;
+			index = ((terrain_coords.x + 1) + (terrain_coords.z + 1) * res) * 3;
 			double pxz_y = terrain[index + 1];
 
 			double height = 0;
@@ -454,6 +447,50 @@ namespace Terrain
 		return 0;
 	}
 
+	coords get_terrain_coords(double x, double z)
+	{
+		if (fabs(x) > GameParameters::area_limit || fabs(z) > GameParameters::area_limit)
+		{
+			return INVALID_COORD;
+		}
 
+		int area_limit_2 = (2 * GameParameters::area_limit);
+		double x_prop = (x + GameParameters::area_limit) / area_limit_2;
+		double x_prop_res = x_prop * res;
+
+		coords ret;
+		// Which terrain coordinate x?
+		ret.x = integer_part(x_prop_res);
+
+		double z_prop = (z + GameParameters::area_limit) / area_limit_2;
+		double z_prop_res = z_prop * res;
+
+		ret.z = integer_part(z_prop_res);
+
+		return ret;
+	}
+
+	Vec3 get_normal(double x, double z)
+	{
+		coords terrain_coords = get_terrain_coords(x, z);
+
+		if (terrain_coords.x < 0)
+		{
+			return Vec3();
+		}
+
+		int res_m1 = res - 1;
+		if (terrain_coords.x < res_m1 && terrain_coords.z < res_m1)
+		{
+			int index = (terrain_coords.x + terrain_coords.z * res) * 3;
+
+			float norm_x = normals[index];
+			float norm_y = normals[index + 1];
+			float norm_z = normals[index + 2];
+
+			return Vec3(norm_x, norm_y, norm_z);
+		}
+		return Vec3();
+	}
 
 }

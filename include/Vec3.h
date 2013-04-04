@@ -6,6 +6,7 @@
 #ifndef VEC3_H_
 #define VEC3_H_
 #include <math.h>
+#include <stdio.h>
 
 class Vec3 {
 public:
@@ -139,6 +140,11 @@ public:
 		default:
 			return x;
 		}
+	}
+
+	void print()
+	{
+		printf("%f,%f,%f", x, y, z);
 	}
 
 	double x, y, z;
