@@ -49,8 +49,8 @@ namespace Terrain
 
 	void init_terrain()
 	{
-		double diff = 2 * GameParameters::area_limit / res;
-		double diff_recp = 1 / (diff * diff);
+		diff = 2 * GameParameters::area_limit / res;
+		diff_recp = 1 / (diff * diff);
 
 		PerlinNoise::generate_p();
 		terrain = generate_terrain(res);

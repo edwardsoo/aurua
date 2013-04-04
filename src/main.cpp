@@ -18,6 +18,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
+#include<string.h>
 
 #include "main.h"
 #include "ViewingMode.h"
@@ -675,7 +676,7 @@ int main(int argc, char **argv) {
 
 	if (argc == 2)
 	{
-		if (argv[1] == "test")
+		if (strcmp(argv[1], "test") == 0)
 		{
 			Terrain::res = 5;
 			Terrain::map = Terrain::MAP_BLAND;
