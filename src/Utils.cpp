@@ -10,6 +10,7 @@
 
 #include "Game.h"
 #include "math.h"
+#include "GameParameters.h"
 
 // debug matrix
 void print_matrix(double* m) {
@@ -128,13 +129,13 @@ bool invert_pose(float *m) {
 
 void draw_grid() {
 	float unit = 5;
-	for (float i = -AREA_LIMIT; i <= AREA_LIMIT; i += unit) {
+	for (float i = -GameParameters::area_limit; i <= GameParameters::area_limit; i += unit) {
 		glBegin(GL_LINES);
 		glColor4f(1, 1, 1, 0.5);
-		glVertex3f(-AREA_LIMIT, 0, i);
-		glVertex3f(AREA_LIMIT, 0, i);
-		glVertex3f(i, 0, -AREA_LIMIT);
-		glVertex3f(i, 0, AREA_LIMIT);
+		glVertex3f(-GameParameters::area_limit, 0, i);
+		glVertex3f(GameParameters::area_limit, 0, i);
+		glVertex3f(i, 0, -GameParameters::area_limit);
+		glVertex3f(i, 0, GameParameters::area_limit);
 		glEnd();
 	}
 }

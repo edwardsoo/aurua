@@ -7,7 +7,7 @@
 
 #include "Game.h"
 
-bool is_wireframe = false;
+bool is_wireframe = true;
 
 Game::Game()
 {
@@ -18,6 +18,8 @@ Game::Game()
 
 	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
 	phys->add(player);
+
+	this->ai = AI();
 }
 
 Game::~Game()

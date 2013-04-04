@@ -10,8 +10,8 @@
 
 #include "PhysicsEngine.h"
 #include "Player.h"
-
-const float AREA_LIMIT = 1000;
+#include "AI.h"
+#include "drone.h"
 
 extern bool is_wireframe;
 
@@ -23,6 +23,11 @@ public:
 
 	PhysicsEngine* phys;
 	Player* player;
+
+	AI ai;
+	Drone* test_drone;
+
+	Object* current_object;
 };
 
 #endif /* GAME_H_ */

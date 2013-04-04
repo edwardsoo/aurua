@@ -19,12 +19,14 @@
 #include "textures.h"
 #include "PerlinNoise.h"
 #include "math.h"
+#include "GameParameters.h"
 
 namespace Terrain
 {
 	GLfloat* terrain;
 	GLfloat* normals;
 	GLint* indices;
+	GLint* indices_solid;
 	GLint* texture_indices;
 	int num_indices;
 
@@ -35,15 +37,9 @@ namespace Terrain
 	 * res * res = total number of squares
 	 */
 	int res = 100;
-	double diff = 2 * AREA_LIMIT / res;
-	double diff_recp = 1 / (diff * diff);
 
-	enum Map
-	{
-		MAP_STANDARD,
-		MAP_DRAGONBALL,
-		MAP_COSINE
-	};
+	double diff;
+	double diff_recp;
 
 	Map map = MAP_STANDARD;
 
@@ -53,16 +49,14 @@ namespace Terrain
 
 	void init_terrain()
 	{
+		double diff = 2 * GameParameters::area_limit / res;
+		double diff_recp = 1 / (diff * diff);
+
 		PerlinNoise::generate_p();
 		terrain = generate_terrain(res);
-		if (is_wireframe)
-		{
-			indices = wind_lines(res, res);
-		}
-		else
-		{
-			indices = wind(res, res);
-		}
+		indices = wind_lines(res, res);
+		indices_solid = wind(res, res);
+
 		normals = generate_normals(res);
 		texture_indices = generate_tex_coords(res);
 		//get_height(750, 100);
@@ -92,7 +86,7 @@ namespace Terrain
 				glNormalPointer(GL_FLOAT, 0, normals);
 				glBindTexture(GL_TEXTURE_2D, Textures::textures[Textures::SAND]);
 				glTexCoordPointer(2, GL_INT, 0, texture_indices);
-				glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices);
+				glDrawElements(GL_TRIANGLE_STRIP, num_indices, GL_UNSIGNED_INT, indices_solid);
 				glDisable(GL_TEXTURE_2D);
 			}
 
@@ -106,12 +100,12 @@ namespace Terrain
 		int x, z;
 		int currIndex = 0;
 
-		float xStart = -AREA_LIMIT;
-		float xEnd = AREA_LIMIT;
+		float xStart = -GameParameters::area_limit;
+		float xEnd = GameParameters::area_limit;
 		float xStep = (xEnd - xStart) / res;
 
-		float yStart = -AREA_LIMIT;
-		float yEnd = AREA_LIMIT;
+		float yStart = -GameParameters::area_limit;
+		float yEnd = GameParameters::area_limit;
 		float yStep = (yEnd - yStart) / res;
 
 		int max_height;
@@ -165,8 +159,10 @@ namespace Terrain
 					y = fabs(PerlinNoise::noise(tempRes, tempResY, tempRes - tempResY)) * max_height * 100;
 					break;
 				case MAP_COSINE:
-					y = abs(sin(temp) * cos(tempY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
-
+					y = abs(sin(tempRes) * cos(tempResY) * (rand() % 10) - ( 40 * cos(tempRes * tempRes - (rand() % 2) * tempResY * tempResY)));
+					break;
+			case MAP_BLAND:
+					y = (x + z) * max_height;
 					break;
 				}
 
@@ -402,14 +398,18 @@ namespace Terrain
 
 	double get_height(double x, double z)
 	{
-		int area_limit_2 = (2 * AREA_LIMIT);
-		double x_prop = (x + AREA_LIMIT) / area_limit_2;
+		if (fabs(x) > GameParameters::area_limit || fabs(z) > GameParameters::area_limit)
+		{
+			return 0;
+		}
+		int area_limit_2 = (2 * GameParameters::area_limit);
+		double x_prop = (x + GameParameters::area_limit) / area_limit_2;
 		double x_prop_res = x_prop * res;
 
 		// Which terrain coordinate x?
 		long terrain_x = integer_part(x_prop_res);
 
-		double z_prop = (z + AREA_LIMIT) / area_limit_2;
+		double z_prop = (z + GameParameters::area_limit) / area_limit_2;
 		double z_prop_res = z_prop * res;
 
 		double terrain_z = integer_part(z_prop_res);

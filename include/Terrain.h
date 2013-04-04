@@ -13,6 +13,17 @@
 
 namespace Terrain
 {
+	enum Map
+	{
+		MAP_STANDARD,
+		MAP_DRAGONBALL,
+		MAP_COSINE,
+		MAP_BLAND
+	};
+
+	extern Map map;
+
+	extern int res;
 
 	extern GLfloat ctrlpoints[4][4][3];
 

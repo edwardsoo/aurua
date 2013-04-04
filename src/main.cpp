@@ -31,6 +31,7 @@
 #include "Terrain.h"
 #include "Drone.h"
 #include "Bolt.h"
+#include "GameParameters.h"
 
 using namespace std;
 using namespace Textures;
@@ -85,12 +86,14 @@ void game_init() {
 			Vec3(1000, 1000, 1000));
 
 	// Player initializations
-	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 2.5,
+	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 10,
 			10);
 	game.phys->add(game.player);
+	game.current_object = game.player;
 
 	// Other objects
 	Drone* drone = new Drone(Vec3(-5, 5, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
+	game.test_drone = drone;
 	game.phys->add(drone);
 	drone = new Drone(Vec3(-2, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
 	game.phys->add(drone);
@@ -194,6 +197,14 @@ void cam_keyboard_callback(unsigned char key, int x, int y) {
 		case 'H':
 			key_states['h'] = true;
 			break;
+		case 'j':
+		case 'J':
+			game.current_object = game.test_drone;
+			break;
+		case 'k':
+		case 'K':
+			game.current_object = game.player;
+			break;
 		case 'r':
 		case 'R':
 			game.player->pos = Vec3(5, 5, 5);
@@ -232,11 +243,11 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 	}
 }
 
-void player_move(Vec3 mov_dir) {
+void object_move(Object* object, Vec3 mov_dir) {
 	double max_speed = WALK_SPEED;
 	// No movement input, "brake" to stop sliding
 	if (mov_dir == Vec3(0, 0, 0)) {
-		game.player->acc += game.player->vel * -SLOW;
+		object->acc += object->vel * -SLOW;
 		return;
 	}
 #if _WIN32
@@ -245,18 +256,18 @@ void player_move(Vec3 mov_dir) {
 		max_speed = RUN_SPEED;
 	}
 #endif
-	double curr_speed = game.player->vel.length();
+	double curr_speed = object->vel.length();
 	// prevent releasing shift to generate a negative scalar
 	if (curr_speed > max_speed) {
 		curr_speed = max_speed;
 	}
 	// accelerate slowly if acc and view align
-	double dir_vel_len = mov_dir.length() * game.player->vel.length();
+	double dir_vel_len = mov_dir.length() * object->vel.length();
 	if (dir_vel_len < 1) {
 		dir_vel_len = 1;
 	}
-	double acc_mod = 4 - (mov_dir.dot(game.player->vel) / dir_vel_len + 2);
-	game.player->acc += mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
+	double acc_mod = 4 - (mov_dir.dot(object->vel) / dir_vel_len + 2);
+	object->acc += mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
 	//debug_player(player);
 }
 
@@ -305,7 +316,7 @@ void keys_consumer() {
 		if (mov_dir != Vec3(0, 0, 0)) {
 			mov_dir.normalize();
 		}
-		player_move(mov_dir);
+		object_move(game.current_object, mov_dir);
 	}
 }
 
@@ -532,6 +543,7 @@ void draw_3D() {
 
 	glLightfv(GL_LIGHT0, GL_POSITION, position0);
 	glLightfv(GL_LIGHT1, GL_POSITION, position1);
+	game.ai.update();
 	draw_scene();
 
 }
@@ -658,6 +670,16 @@ int main(int argc, char **argv) {
 	} else {
 		for (int x = 0; x < 3; x++) {
 			in_value[x] = 0;
+		}
+	}
+
+	if (argc == 2)
+	{
+		if (argv[1] == "test")
+		{
+			Terrain::res = 5;
+			Terrain::map = Terrain::MAP_BLAND;
+			GameParameters::area_limit = 50;
 		}
 	}
 

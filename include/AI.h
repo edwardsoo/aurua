@@ -22,6 +22,8 @@ public:
 	AI();
 	virtual ~AI();
 
+	void update();
+
 	void set_enemy(Object* enemy);
 
 	void go_to_random_pos();

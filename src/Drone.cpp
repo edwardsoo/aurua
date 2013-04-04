@@ -23,6 +23,8 @@
 #include<stdint.h>
 #endif
 
+#include <stdio.h>
+
 Drone::Drone(Vec3 _pos, Vec3 _vel, Vec3 _acc) :
 		Character(_pos, _vel, _acc, 1, 1, 50, 100) {
 }
@@ -41,6 +43,12 @@ void Drone::draw() {
 	glTranslatef(0, 0, .5);
 	glScalef(1, 0.2, 1);
 	glColor3f(1, 0, 0);
-	glutSolidCube(1);
+	glutSolidCube(4);
 	glPopMatrix();
+
+	/*this->pos.x += (rand() % 3) - 1;
+
+	this->pos.z += (rand() % 3) - 1;
+
+	printf("%f %f\n", this->pos.x, this->pos.z);*/
 }

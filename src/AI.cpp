@@ -34,6 +34,10 @@ void AI::set_enemy(Object* enemy)
 	this->enemy = enemy;
 }
 
+void AI::update()
+{
+}
+
 Vec3 AI::get_enemy_pos()
 {
 	return this->enemy->pos;
