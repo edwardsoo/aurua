@@ -8,6 +8,7 @@
 #include "Object.h"
 
 Object::Object() {
+	proxy = NULL;
 	pos = Vec3();
 	vel = Vec3();
 	acc = Vec3();
@@ -16,29 +17,17 @@ Object::Object() {
 	is_on_ground = true;
 }
 
-Object::Object(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass) {
+Object::Object(Vec3 _pos, Vec3 _vel, Vec3 _acc, float _radius, float _mass,
+		Proxy* _proxy) {
 	pos = _pos;
 	vel = _vel;
 	acc = _acc;
 	radius = _radius;
 	mass = _mass;
 	is_on_ground = true;
+	proxy = _proxy;
 }
 
 Object::~Object() {
 	// TODO Auto-generated destructor stub
-}
-
-bool Object::collide(Object *other) {
-	float distance = (pos - other->pos).length();
-	// Check if objects are overlapping
-	if (distance < (radius + other->radius)) {
-		// Check if objects are moving toward each other
-		return (vel - other->vel).dot(pos - other->pos) < 0;
-	}
-	return false;
-}
-
-void Object::draw() {
-
 }
