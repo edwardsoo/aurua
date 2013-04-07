@@ -8,7 +8,7 @@
 #include "Proxy.h"
 
 Proxy::Proxy() {
-	// TODO Auto-generated constructor stub
+	object = NULL;
 
 }
 
@@ -16,3 +16,10 @@ Proxy::~Proxy() {
 	// TODO Auto-generated destructor stub
 }
 
+bool Proxy::collide(Proxy* other) {
+	return false;
+}
+
+std::string Proxy::get_type() {
+	return "";
+}

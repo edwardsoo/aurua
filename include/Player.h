@@ -16,11 +16,13 @@ static const float RUN_SPEED = 150.0f;
 static const float ACC = 200.0f;
 static const float SLOW = 10.0f;
 static const float AIM_DIST = 50.0f;
+static const float PLAYER_HEIGHT = 5.0f;
 
 class Player: public Character {
 public:
-	Player(Vec3, Vec3, Vec3, float, float);
+	Player(Vec3, Vec3, Vec3, float);
 	virtual ~Player();
+	Vec3 get_proxy_pos();
 	Vec3 get_eye();
 	Camera* cam;
 	bool aiming;

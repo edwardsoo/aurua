@@ -24,7 +24,7 @@
 #endif
 
 Bolt::Bolt(Vec3 _pos, Vec3 _vel, Vec3 _acc) :
-		Object(_pos, _vel, _acc, BOLT_RADIUS, 0) {
+		Object(_pos, _vel, _acc, 0) {
 	// TODO Auto-generated constructor stub
 
 }

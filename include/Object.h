@@ -9,15 +9,20 @@
 #define OBJECT_H_
 #include "Vec3.h"
 
+class Proxy;
 class Object {
 public:
 	Object();
-	Object(Vec3, Vec3, Vec3, float, float, Proxy*);
+	Object(Vec3, Vec3, Vec3, float);
 	virtual ~Object();
-	bool collide(Object*);
 	virtual void draw();
-	Vec3 get_proxy_pos();
+
+	//Bounding volume of object
 	Proxy* proxy;
+	// Get proxy center relative to object position
+	virtual Vec3 get_proxy_pos();
+
+	// Base of object
 	Vec3 pos;
 	Vec3 vel;
 	Vec3 acc;

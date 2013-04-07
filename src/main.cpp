@@ -87,8 +87,7 @@ void game_init() {
 			Vec3(1000, 1000, 1000));
 
 	// Player initializations
-	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 10,
-			10);
+	game.player = new Player(Vec3(5, 5, 5), Vec3(0, 0, 0), Vec3(0, 0, 0), 10);
 	game.phys->add(game.player);
 	game.current_object = game.player;
 
@@ -286,13 +285,11 @@ void keys_consumer() {
 		{
 			// walk mode
 			mov_f = Vec3(cam->view.x, 0, cam->view.z);
-			game.player->is_on_ground = true;
 		}
 		else
 		{
 			// fly mode
 			mov_f = cam->view;
-			game.player->is_on_ground = false;
 		}
 		mov_f.normalize();
 		// for side strafe

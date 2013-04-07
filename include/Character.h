@@ -12,7 +12,7 @@
 
 class Character: public Object {
 public:
-	Character(Vec3, Vec3, Vec3, float, float, int, int);
+	Character(Vec3, Vec3, Vec3, float, int, int);
 	virtual ~Character();
 	void regenerate();
 	int life, stamina;

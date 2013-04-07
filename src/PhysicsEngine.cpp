@@ -13,6 +13,7 @@
 
 static const double FRICTION = 0.8;
 static const double NORMAL_FORCE = 0.5;
+static const double ABS_GROUND_TOL = 0.1;
 
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
@@ -28,9 +29,10 @@ void PhysicsEngine::add_object(Object* o) {
 }
 
 void PhysicsEngine::advance_state(float t) {
+	pre_move_change(t);
 	update_objects_position(t);
 	handle_collisions();
-	apply_global(t);
+	post_move_change(t);
 }
 
 void PhysicsEngine::update_objects_position(float dt_ms) {
@@ -41,22 +43,22 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 		Vec3 old_pos = obj->pos;
 
 		// Accelerate
-		if (obj->acc.length() != 0)
-		{
+		if (obj->acc.length() != 0) {
 			obj->vel += obj->acc * dt_sec;
 			obj->acc = Vec3(0, 0, 0);
 		}
 
 		// Move object
 		obj->pos += obj->vel * dt_sec;
-
-		if (obj->is_on_ground)
-		{
-			obj->pos.y = Terrain::get_height(obj->pos.x, obj->pos.z);
+		if (old_pos != obj->pos) {
+			/*if (1) {
+			 obj->pos.y = Terrain::get_height(obj->pos.x, obj->pos.z);
+			 printf("Height: %f\n", obj->pos.y);
+			 }*/
+			octree->remove(obj);
+			octree->add(obj);
 		}
 
-		octree->remove(obj);
-		octree->add(obj);
 	}
 }
 
@@ -68,31 +70,48 @@ void PhysicsEngine::handle_collisions() {
 		ObjectPair pair = pairs[i];
 		Object* obj_1 = pair.obj_1;
 		Object* obj_2 = pair.obj_2;
-		if (obj_1->collide(obj_2)) {
+		if (obj_1->proxy && obj_2->proxy
+				&& obj_1->proxy->collide(obj_2->proxy)) {
 			// reflect_objects(obj_1, obj_2);
 			rebounce_objects(obj_1, obj_2);
 		}
 	}
 }
 
-void PhysicsEngine::apply_global(float dt_ms) {
+void PhysicsEngine::pre_move_change(float dt_ms) {
 	float dt_sec = dt_ms / 1000.0;
 	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
 			itr++) {
 		Object* obj = *itr;
 		if (obj->mass > 0) {
-			// Apply shitty physics friction/air drag
-			obj->vel *= pow(1 - FRICTION, dt_sec);
+			if (obj->mass > 0) {
+				obj->acc += Vec3(0, GRAVITY * dt_sec, 0);
+			}
+		}
+	}
+}
 
-			/*// Apply gravity
-			 if (obj->mass > 0) {
-			 obj->vel += Vec3(0, GRAVITY*dt_sec, 0);
-			 }
+void PhysicsEngine::post_move_change(float dt_ms) {
+	float dt_sec = dt_ms / 1000.0;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
+			itr++) {
+		Object* obj = *itr;
+		if (obj->mass > 0) {
+			double ground_y = Terrain::get_height(obj->pos.x, obj->pos.z);
+			bool on_ground = abs(
+					obj->pos.y - Terrain::get_height(obj->pos.x, obj->pos.z))
+					< ABS_GROUND_TOL;
 
-			 // Prevent objects going under ground
-			 if (obj->pos.y - obj->radius < 0) {
-			 obj->pos.y = obj->radius;
-			 }*/
+			if (on_ground) {
+				// Apply unrealistic friction
+				obj->vel *= pow(1 - FRICTION, dt_sec);
+			}
+
+			// Prevent objects going under ground
+			if (obj->pos.y < ground_y) {
+				obj->pos.y = ground_y;
+				obj->vel.y = 0;
+			}
 		}
 	}
 }

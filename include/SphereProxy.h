@@ -10,6 +10,7 @@
 
 #include "Proxy.h"
 
+class Object;
 class SphereProxy: public Proxy {
 public:
 	SphereProxy(Object*, double);

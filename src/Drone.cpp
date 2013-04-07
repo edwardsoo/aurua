@@ -23,14 +23,19 @@
 #include<stdint.h>
 #endif
 
-#include <stdio.h>
+#include "SphereProxy.h"
 
 Drone::Drone(Vec3 _pos, Vec3 _vel, Vec3 _acc) :
-		Character(_pos, _vel, _acc, 1, 1, 50, 100) {
+		Character(_pos, _vel, _acc, 3, 50, 100) {
+	proxy = new SphereProxy(this, DRONE_RADIUS / 2);
 }
 
 Drone::~Drone() {
-	// TODO Auto-generated destructor stub
+	delete proxy;
+}
+
+Vec3 Drone::get_proxy_pos() {
+	return Vec3(0, DRONE_HOVER_HEIGHT, 0);
 }
 
 void Drone::draw() {
@@ -45,10 +50,4 @@ void Drone::draw() {
 	glColor3f(1, 0, 0);
 	glutSolidCube(4);
 	glPopMatrix();
-
-	/*this->pos.x += (rand() % 3) - 1;
-
-	this->pos.z += (rand() % 3) - 1;
-
-	printf("%f %f\n", this->pos.x, this->pos.z);*/
 }

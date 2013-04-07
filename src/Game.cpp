@@ -16,7 +16,7 @@ Game::Game()
 
 	// Player initializations
 
-	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 2, 1);
+	player = new Player(Vec3(0, 2, 0), Vec3(0, 0, 0), Vec3(0, 0, 0), 10);
 	phys->add(player);
 
 	this->ai = AI();

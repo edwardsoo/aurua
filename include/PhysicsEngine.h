@@ -28,7 +28,8 @@ private:
 	void add_object(Object*);
 	void update_objects_position(float t);
 	void handle_collisions();
-	void apply_global(float t);
+	void pre_move_change(float t);
+	void post_move_change(float t);
 	void reflect_objects(Object*, Object*);
 	void rebounce_objects(Object*, Object*);
 };

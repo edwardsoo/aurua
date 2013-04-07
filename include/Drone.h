@@ -10,11 +10,15 @@
 
 #include "Character.h"
 
+static const float DRONE_HOVER_HEIGHT = 5.0f;
+static const float DRONE_RADIUS = 1.0f;
+
 class Drone: public Character {
 public:
 	Drone(Vec3, Vec3, Vec3);
 	virtual ~Drone();
 	void draw();
+	Vec3 get_proxy_pos();
 };
 
 #endif /* DRONE_H_ */
