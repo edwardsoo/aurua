@@ -16,7 +16,10 @@ using std::vector;
 
 class PhysicsEngine {
 public:
-	static const float GRAVITY = -9.8f;
+	static const double GRAVITY = -20.0;
+	static const double FRICTION = 0.8;
+	static const double NORMAL_FORCE = 0.5;
+	static const double ABS_GROUND_TOL = 0.05;
 	PhysicsEngine(Vec3 min, Vec3 max);
 	virtual ~PhysicsEngine();
 	void advance_state(float t);
@@ -28,6 +31,7 @@ private:
 	void add_object(Object*);
 	void update_objects_position(float t);
 	void handle_collisions();
+	bool object_on_ground(Object* obj);
 	void pre_move_change(float t);
 	void post_move_change(float t);
 	void reflect_objects(Object*, Object*);

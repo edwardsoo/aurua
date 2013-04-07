@@ -11,10 +11,6 @@
 #include "PhysicsEngine.h"
 #include "Terrain.h"
 
-static const double FRICTION = 0.8;
-static const double NORMAL_FORCE = 0.5;
-static const double ABS_GROUND_TOL = 0.1;
-
 PhysicsEngine::PhysicsEngine(Vec3 min, Vec3 max) {
 	Bound bound = Bound(min, max);
 	octree = new Octree(bound, false);
@@ -35,12 +31,39 @@ void PhysicsEngine::advance_state(float t) {
 	post_move_change(t);
 }
 
+void PhysicsEngine::pre_move_change(float dt_ms) {
+	float dt_sec = dt_ms / 1000.0;
+	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
+			itr++) {
+		Object* obj = *itr;
+		if (obj->mass > 0) {
+			obj->acc += Vec3(0, GRAVITY, 0);
+		}
+		bool on_ground = object_on_ground(obj);
+		Vec3 ground_normal = Terrain::get_normal(obj->pos.x, obj->pos.z);
+		// slows object running up hill
+		if (on_ground && obj->vel.length() != 0
+				&& ground_normal.length() != 0) {
+			double lens_product = ground_normal.length() * obj->vel.length();
+			debug_vec3(ground_normal);
+			debug_vec3(obj->vel);
+
+			double cos_angle = ground_normal.dot(obj->vel) / lens_product;
+			double mod = cos_angle;
+			if (mod > 0)
+				mod = 0;
+			obj->acc += obj->vel * mod + ground_normal;
+			printf("cos_angle %f\n", cos_angle);
+			printf("mod %f\n\n", mod);
+		}
+	}
+}
+
 void PhysicsEngine::update_objects_position(float dt_ms) {
 	float dt_sec = dt_ms / 1000.0;
 	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
 			itr++) {
 		Object* obj = *itr;
-		Vec3 old_pos = obj->pos;
 
 		// Accelerate
 		if (obj->acc.length() != 0) {
@@ -50,15 +73,6 @@ void PhysicsEngine::update_objects_position(float dt_ms) {
 
 		// Move object
 		obj->pos += obj->vel * dt_sec;
-		if (old_pos != obj->pos) {
-			/*if (1) {
-			 obj->pos.y = Terrain::get_height(obj->pos.x, obj->pos.z);
-			 printf("Height: %f\n", obj->pos.y);
-			 }*/
-			octree->remove(obj);
-			octree->add(obj);
-		}
-
 	}
 }
 
@@ -72,23 +86,14 @@ void PhysicsEngine::handle_collisions() {
 		Object* obj_2 = pair.obj_2;
 		if (obj_1->proxy && obj_2->proxy
 				&& obj_1->proxy->collide(obj_2->proxy)) {
-			// reflect_objects(obj_1, obj_2);
 			rebounce_objects(obj_1, obj_2);
 		}
 	}
 }
 
-void PhysicsEngine::pre_move_change(float dt_ms) {
-	float dt_sec = dt_ms / 1000.0;
-	for (set<Object*>::iterator itr = objects.begin(); itr != objects.end();
-			itr++) {
-		Object* obj = *itr;
-		if (obj->mass > 0) {
-			if (obj->mass > 0) {
-				obj->acc += Vec3(0, GRAVITY * dt_sec, 0);
-			}
-		}
-	}
+bool PhysicsEngine::object_on_ground(Object* obj) {
+	return abs(obj->pos.y - Terrain::get_height(obj->pos.x, obj->pos.z))
+			< ABS_GROUND_TOL;
 }
 
 void PhysicsEngine::post_move_change(float dt_ms) {
@@ -98,21 +103,25 @@ void PhysicsEngine::post_move_change(float dt_ms) {
 		Object* obj = *itr;
 		if (obj->mass > 0) {
 			double ground_y = Terrain::get_height(obj->pos.x, obj->pos.z);
-			bool on_ground = abs(
-					obj->pos.y - Terrain::get_height(obj->pos.x, obj->pos.z))
-					< ABS_GROUND_TOL;
-
-			if (on_ground) {
-				// Apply unrealistic friction
-				obj->vel *= pow(1 - FRICTION, dt_sec);
-			}
+			bool on_ground = object_on_ground(obj);
 
 			// Prevent objects going under ground
 			if (obj->pos.y < ground_y) {
 				obj->pos.y = ground_y;
-				obj->vel.y = 0;
 			}
+
+			if (on_ground) {
+				// Apply unrealistic friction
+				double new_kin = pow(1 - FRICTION, dt_sec);
+				obj->vel.x *= new_kin;
+				obj->vel.z *= new_kin;
+				obj->vel.y = 0;
+
+			}
+
 		}
+		octree->remove(obj);
+		octree->add(obj);
 	}
 }
 
@@ -120,19 +129,12 @@ void PhysicsEngine::reflect_objects(Object* obj_1, Object* obj_2) {
 	// Reflect object velocities around normal of collision
 	// disregard momentum, no energy loss
 	// vel' = vel - 2*(n*(n dot vel))
-	printf("Before:\n");
-	debug_vec3(obj_1->vel);
-	debug_vec3(obj_2->vel);
 
 	Vec3 n = obj_1->pos - obj_2->pos;
 	float net_mass = obj_1->mass + obj_2->mass;
 	n.normalize();
 	obj_1->vel -= n * (n.dot(obj_1->vel)) * 2 * (obj_2->mass / net_mass);
 	obj_2->vel -= n * (n.dot(obj_2->vel)) * 2 * (obj_1->mass / net_mass);
-
-	printf("After:\n");
-	debug_vec3(obj_1->vel);
-	debug_vec3(obj_2->vel);
 }
 
 void PhysicsEngine::rebounce_objects(Object* obj_1, Object* obj_2) {

@@ -19,7 +19,6 @@ public:
 
 	//Bounding volume of object
 	Proxy* proxy;
-	// Get proxy center relative to object position
 	virtual Vec3 get_proxy_pos();
 
 	// Base of object

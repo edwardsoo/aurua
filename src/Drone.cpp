@@ -35,11 +35,12 @@ Drone::~Drone() {
 }
 
 Vec3 Drone::get_proxy_pos() {
-	return Vec3(0, DRONE_HOVER_HEIGHT, 0);
+	return pos + Vec3(0, DRONE_HOVER_HEIGHT, 0);
 }
 
 void Drone::draw() {
 	glPushMatrix();
+	glTranslatef(0, DRONE_HOVER_HEIGHT, 0);
 	glColor3f(1, 1, 1);
 	glutSolidSphere(.5, 20, 20);
 	glTranslatef(0, 0, -.5);

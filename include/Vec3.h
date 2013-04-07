@@ -128,9 +128,8 @@ public:
 		z = fabs(z);
 	}
 	// access to individual elements
-	double& operator[] (int i) {
-		switch (i)
-		{
+	double& operator[](int i) {
+		switch (i) {
 		case 0:
 			return x;
 		case 1:
@@ -140,11 +139,6 @@ public:
 		default:
 			return x;
 		}
-	}
-
-	void print()
-	{
-		printf("%f,%f,%f", x, y, z);
 	}
 
 	double x, y, z;

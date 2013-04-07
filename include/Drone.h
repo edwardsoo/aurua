@@ -10,7 +10,7 @@
 
 #include "Character.h"
 
-static const float DRONE_HOVER_HEIGHT = 5.0f;
+static const float DRONE_HOVER_HEIGHT = 3.0f;
 static const float DRONE_RADIUS = 1.0f;
 
 class Drone: public Character {

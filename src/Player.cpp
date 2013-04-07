@@ -27,5 +27,5 @@ Vec3 Player::get_eye() {
 }
 
 Vec3 Player::get_proxy_pos() {
-	return Vec3(0, PLAYER_HEIGHT / 2, 0);
+	return pos + Vec3(0, PLAYER_HEIGHT / 2, 0);
 }

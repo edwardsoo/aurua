@@ -92,17 +92,17 @@ void game_init() {
 	game.current_object = game.player;
 
 	// Other objects
-	Drone* drone = new Drone(Vec3(-5, 5, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
-	game.test_drone = drone;
-	game.phys->add(drone);
-	drone = new Drone(Vec3(-2, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
-	game.phys->add(drone);
-	drone = new Drone(Vec3(-3, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
-	game.phys->add(drone);
-	drone = new Drone(Vec3(-5, 5, -1), Vec3(0, 0, 0), Vec3(0, 0, 0));
-	game.phys->add(drone);
+//	Drone* drone = new Drone(Vec3(-5, 100, -5), Vec3(0, 0, 0), Vec3(0, 0, 0));
+//	game.test_drone = drone;
+//	game.phys->add(drone);
+//	drone = new Drone(Vec3(-2, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
+//	game.phys->add(drone);
+//	drone = new Drone(Vec3(-3, 5, -2), Vec3(0, 0, 0), Vec3(0, 0, 0));
+//	game.phys->add(drone);
+//	drone = new Drone(Vec3(-5, 5, -1), Vec3(0, 0, 0), Vec3(0, 0, 0));
+//	game.phys->add(drone);
 
-	// Terrains
+// Terrains
 	Terrain::init_terrain();
 }
 
@@ -246,10 +246,12 @@ void cam_keyup_callback(unsigned char key, int x, int y) {
 void object_move(Object* object, Vec3 mov_dir) {
 	double max_speed = WALK_SPEED;
 	// No movement input, "brake" to stop sliding
-	if (mov_dir == Vec3(0, 0, 0)) {
-		object->acc += object->vel * -SLOW;
-		return;
-	}
+	/*if (mov_dir == Vec3(0, 0, 0)) {
+	 Vec3 decel = Vec3(object->vel.x, 0, object->vel.z) * -SLOW;
+	 object->acc += decel;
+	 return;
+	 }*/
+
 #if _WIN32
 	// return states of the left shift key
 	if (GetKeyState(VK_LSHIFT) & 0x80) {
@@ -268,7 +270,7 @@ void object_move(Object* object, Vec3 mov_dir) {
 	}
 	double acc_mod = 4 - (mov_dir.dot(object->vel) / dir_vel_len + 2);
 	object->acc += mov_dir * (1 - curr_speed / max_speed) * acc_mod * ACC;
-	//debug_player(player);
+	//debug_player(game.player);
 }
 
 void keys_consumer() {
@@ -281,13 +283,10 @@ void keys_consumer() {
 		Camera* cam = game.player->cam;
 
 		mov_dir = Vec3(0, 0, 0);
-		if (!special_states[GLUT_KEY_F1])
-		{
+		if (!special_states[GLUT_KEY_F1]) {
 			// walk mode
 			mov_f = Vec3(cam->view.x, 0, cam->view.z);
-		}
-		else
-		{
+		} else {
 			// fly mode
 			mov_f = cam->view;
 		}
@@ -307,12 +306,11 @@ void keys_consumer() {
 			mov_dir -= mov_r;
 		}
 
-		if (key_states['h'])
-		{
+		if (key_states['h']) {
 			Terrain::is_request_print = true;
-			Vec3 v = Terrain::get_normal(game.player->pos.x, game.player->pos.z);
-			v.print();
-
+			Vec3 v = Terrain::get_normal(game.player->pos.x,
+					game.player->pos.z);
+			debug_vec3(v);
 		}
 		if (mov_dir != Vec3(0, 0, 0)) {
 			mov_dir.normalize();
@@ -338,6 +336,7 @@ void mouse_callback(int button, int state, int x, int y) {
 		aim_dir.normalize();
 		Bolt *bolt = new Bolt(blt_ori, aim_dir * BOLT_SPEED, Vec3(0, 0, 0));
 		game.phys->add(bolt);
+		fflush(stdout);
 	}
 }
 
@@ -412,7 +411,26 @@ void draw_objects() {
 	}
 }
 
+void draw_debug_ground() {
+
+	// visually debug ground height and normal
+	glPushMatrix();
+	Vec3 ground_normal = Terrain::get_normal(game.player->pos.x,
+			game.player->pos.z);
+	Vec3 start = Vec3(game.player->pos.x,
+			Terrain::get_height(game.player->pos.x, game.player->pos.z),
+			game.player->pos.z);
+	Vec3 end = start + ground_normal * 10000;
+	glColor3f(1, 0, 0);
+	glBegin(GL_LINES);
+	glVertex3f(start.x, start.y, start.z);
+	glVertex3f(end.x, end.y, end.z);
+	glEnd();
+	glPopMatrix();
+}
+
 void draw_scene() {
+	draw_debug_ground();
 	glPushMatrix();
 	draw_objects();
 	glPopMatrix();
@@ -421,6 +439,7 @@ void draw_scene() {
 	draw_sky();
 	glPopMatrix();
 	Terrain::draw_terrain();
+	draw_grid();
 
 }
 
@@ -674,10 +693,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (argc == 2)
-	{
-		if (strcmp(argv[1], "test") == 0)
-		{
+	if (argc == 2) {
+		if (strcmp(argv[1], "test") == 0) {
 			Terrain::res = 5;
 			Terrain::map = Terrain::MAP_BLAND;
 			GameParameters::area_limit = 50;
